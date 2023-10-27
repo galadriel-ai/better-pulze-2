@@ -69,7 +69,7 @@ def custom_openapi():
 def _get_servers():
     servers = []
     if settings.is_production():
-        pass
+        servers.append({"url": "https://llm.sidekik.ai/"})
     else:
         base_url = settings.API_BASE_URL
         if base_url.endswith("/"):
