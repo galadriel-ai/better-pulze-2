@@ -1,7 +1,6 @@
-import os
-import json
 import requests
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
+from fastapi.responses import JSONResponse
 
 from router import api_logger
 from router.service.completion.entities import ChatCompletionRequest, ChatCompletionResponse
@@ -20,6 +19,7 @@ logger = api_logger.get()
 )
 async def endpoint(
         request: ChatCompletionRequest,
+        authorization: str = Header(None)
 ):
     # Clean up etc
     request.model = "gpt-4"  # TODO: pick model in a smart way :)
@@ -38,9 +38,8 @@ async def endpoint(
     response = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",  # TODO: handle API key
+            "Authorization": authorization
         },
-        data=json.dumps(formatted_dict)
+        json=formatted_dict
     )
-    return response.json()
+    return JSONResponse(content=response.json(), status_code=response.status_code)
