@@ -12,6 +12,7 @@ from router.service.completion.entities import ChatCompletionRequest
 from router.service.completion.intent_router import detect_intent, Intent
 
 
+@traceable(run_type="chain", name="CompletionService")
 async def execute(request: ChatCompletionRequest, authorization=None) -> JSONResponse:
     # Clean up etc
     request.model = "gpt-4"  # TODO: pick model in a smart way :)
