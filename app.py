@@ -6,9 +6,13 @@ from starlette.middleware.cors import CORSMiddleware
 import settings
 from router.routers import main_router
 from router.routers import routing_utils
-from router.service.exception_handlers.exception_handlers import custom_exception_handler
+from router.service.exception_handlers.exception_handlers import \
+    custom_exception_handler
 from router.service.middleware.main_middleware import MainMiddleware
-from router.service.middleware.request_enrichment_middleware import RequestEnrichmentMiddleware
+from router.service.middleware.request_enrichment_middleware import \
+    RequestEnrichmentMiddleware
+from router.service.monitoring.prometheus_metrics_endpoint import metrics
+from router.service.monitoring.prometheus_middleware import PrometheusMiddleware
 
 app = FastAPI()
 
@@ -90,6 +94,7 @@ app.add_middleware(
 )
 app.add_middleware(MainMiddleware)
 app.add_middleware(RequestEnrichmentMiddleware)
+app.add_middleware(PrometheusMiddleware, filter_unhandled_paths=True)
 
 # exception handlers run AFTER the middlewares!
 # Handles API error responses
@@ -118,3 +123,6 @@ def get_api_info() -> ApiInfo:
     response_model=ApiInfo)
 def root():
     return routing_utils.to_json_response(get_api_info().dict())
+
+
+app.add_route("/metrics", metrics)

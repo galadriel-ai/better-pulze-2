@@ -13,6 +13,8 @@ LOG_FILE_PATH = "router/logs/logs.log"
 
 ENVIRONMENT = os.getenv("PLATFORM_ENVIRONMENT", "local")
 
+PROMETHEUS_MULTIPROC_DIR = os.getenv("PROMETHEUS_MULTIPROC_DIR", None)
+
 
 def is_production():
     return ENVIRONMENT == "production"
