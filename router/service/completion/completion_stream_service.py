@@ -12,13 +12,13 @@ from router.service.completion.intent_router import detect_intent, Intent
 
 async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIterable:
     # Clean up etc
-    request.model = "gpt-4"  # TODO: pick model in a smart way :)
+    request.model = "gpt-4"
     request_input = request.model_dump()
     intent, intent_usage = detect_intent(request_input["messages"][-1]["content"])
     if intent == Intent.REASONING:
-        request.model = "gpt-4"
+        request_input["model"] = "gpt-4"
     else:
-        request.model = "gpt-3.5-turbo-16k"
+        request_input["model"] = "gpt-3.5-turbo-16k"
     for m in request_input["messages"]:
         if not m.get("function_call"):
             m.pop("name", None)
