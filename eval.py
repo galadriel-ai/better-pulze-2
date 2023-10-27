@@ -11,9 +11,10 @@ DATASET_NAME = "Chat manager test"
 
 
 def make_router():
-    # TODO replace this with something that actually routes and
-    # implements ChatOpenAI compatible interface
-    return ChatOpenAI(temperature=0.)
+    return ChatOpenAI(
+        openai_api_base="http://127.0.0.1:5000/v1",
+        temperature=0.
+    )
 
 eval_config = RunEvalConfig(
     input_key="messages",

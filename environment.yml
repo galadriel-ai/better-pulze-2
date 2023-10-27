@@ -1,0 +1,8 @@
+name: router
+channels:
+  - defaults
+dependencies:
+  - python=3.11.0
+  - pip=23.3
+  - pip:
+      - -r requirements.txt
