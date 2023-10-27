@@ -1,3 +1,5 @@
+import os
+
 import requests
 from fastapi import APIRouter, Header
 from fastapi.responses import JSONResponse
@@ -44,7 +46,7 @@ async def endpoint(
     response = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
-            "Authorization": authorization
+            "Authorization": authorization if authorization else f'Bearer {os.getenv("OPENAI_API_KEY")}'
         },
         json=formatted_dict
     )
