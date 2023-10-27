@@ -7,3 +7,4 @@ langchain
 openai
 langsmith
 python-dotenv
+aiohttp==3.8.6
