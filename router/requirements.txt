@@ -1,0 +1,9 @@
+fastapi
+requests
+uvicorn
+gunicorn
+python-json-logger
+langchain
+openai
+langsmith
+python-dotenv
