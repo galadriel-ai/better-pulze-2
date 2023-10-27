@@ -3,6 +3,7 @@ from _decimal import Decimal
 from typing import Dict
 
 import aiohttp
+from langsmith import traceable
 from starlette.responses import JSONResponse
 
 from router.domain.pricing import calculate_tokens_price
@@ -31,8 +32,7 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> JSONRes
         if value:
             formatted_dict[key] = value
 
-    response = await _get_oai_response(authorization, formatted_dict)
-    response_dict: Dict = await response.json()
+    status, response_dict = await _get_oai_response(authorization, formatted_dict)
     usage = calculate_tokens_price.cost_from_api_response(response_dict)
     response_dict["price"] = str(Decimal(usage.price) + Decimal(intent_usage.price))
     response_dict["price_currency"] = usage.price_currency
@@ -40,18 +40,20 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> JSONRes
         _get_usage_response(intent_usage, "intent"),
         _get_usage_response(usage, "completion"),
     ]
-    return JSONResponse(content=response_dict, status_code=response.status)
+    return JSONResponse(content=response_dict, status_code=status)
 
 
+@traceable(run_type="llm", name="openai.ChatCompletion.create")
 async def _get_oai_response(authorization, formatted_dict):
     async with aiohttp.ClientSession() as session:
-        return await session.post(
+        res = await session.post(
             "https://api.openai.com/v1/chat/completions",
             headers={
                 "Authorization": authorization if authorization else f'Bearer {os.getenv("OPENAI_API_KEY")}'
             },
             json=formatted_dict
         )
+        return res.status, await res.json()
 
 
 def _get_usage_response(usage: UsageDebug, usage_type: str) -> Dict:
