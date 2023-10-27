@@ -1,6 +1,8 @@
 from typing import Dict
 from decimal import *
 
+from router.domain.pricing.entities import UsageDebug
+
 price1K = {
     "text-ada-001": "0.0004",
     "text-babbage-001": "0.0005",
@@ -24,7 +26,7 @@ price1K = {
 }
 
 
-def cost(model: str, n_input_tokens: int, n_output_tokens: int) -> str:
+def cost(model: str, n_input_tokens: int, n_output_tokens: int) -> UsageDebug:
     """Compute the cost of an API call.
 
     Args:
@@ -36,15 +38,28 @@ def cost(model: str, n_input_tokens: int, n_output_tokens: int) -> str:
         The cost in USD. 0 if the model is not supported.
     """
     if model not in price1K:
-        return "0"
-        # raise ValueError(f"Unknown model: {model}")
+        return UsageDebug(
+            model=model,
+            prompt_tokens=n_input_tokens,
+            completion_tokens=n_output_tokens,
+            total_tokens=n_input_tokens + n_output_tokens,
+            price="0"
+        )
     pricing = price1K[model]
     if isinstance(pricing, tuple):
-        return str((Decimal(pricing[0]) * n_input_tokens + Decimal(pricing[1]) * n_output_tokens) / Decimal(1000))
-    return str(Decimal(pricing) * Decimal(n_input_tokens + n_output_tokens) / Decimal(1000))
+        price = str((Decimal(pricing[0]) * n_input_tokens + Decimal(pricing[1]) * n_output_tokens) / Decimal(1000))
+    else:
+        price = str(Decimal(pricing) * Decimal(n_input_tokens + n_output_tokens) / Decimal(1000))
+    return UsageDebug(
+        model=model,
+        prompt_tokens=n_input_tokens,
+        completion_tokens=n_output_tokens,
+        total_tokens=n_input_tokens + n_output_tokens,
+        price=price
+    )
 
 
-def cost_from_api_response(response: Dict) -> float:
+def cost_from_api_response(response: Dict) -> UsageDebug:
     """Compute the cost of an API call.
 
     Args:

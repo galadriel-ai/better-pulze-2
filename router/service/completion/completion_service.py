@@ -6,6 +6,7 @@ import aiohttp
 from starlette.responses import JSONResponse
 
 from router.domain.pricing import calculate_tokens_price
+from router.domain.pricing.entities import UsageDebug
 from router.service.completion.entities import ChatCompletionRequest
 from router.service.completion.intent_router import detect_intent, Intent
 
@@ -14,7 +15,7 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> JSONRes
     # Clean up etc
     request.model = "gpt-4"  # TODO: pick model in a smart way :)
     request_input = request.model_dump()
-    intent, intent_price = detect_intent(request_input["messages"][-1]["content"])
+    intent, intent_usage = detect_intent(request_input["messages"][-1]["content"])
     if intent == Intent.REASONING:
         request.model = "gpt-4"
     else:
@@ -32,9 +33,13 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> JSONRes
 
     response = await _get_oai_response(authorization, formatted_dict)
     response_dict: Dict = await response.json()
-    price = calculate_tokens_price.cost_from_api_response(response_dict)
-    response_dict["price"] = str(Decimal(price) + Decimal(intent_price))
-    response_dict["price_currency"] = "USD"
+    usage = calculate_tokens_price.cost_from_api_response(response_dict)
+    response_dict["price"] = str(Decimal(usage.price) + Decimal(intent_usage.price))
+    response_dict["price_currency"] = usage.price_currency
+    response_dict["usage_debug"] = [
+        _get_usage_response(intent_usage, "intent"),
+        _get_usage_response(usage, "completion"),
+    ]
     return JSONResponse(content=response_dict, status_code=response.status)
 
 
@@ -47,3 +52,10 @@ async def _get_oai_response(authorization, formatted_dict):
             },
             json=formatted_dict
         )
+
+
+def _get_usage_response(usage: UsageDebug, usage_type: str) -> Dict:
+    return {
+        "type": usage_type,
+        **usage.__dict__
+    }

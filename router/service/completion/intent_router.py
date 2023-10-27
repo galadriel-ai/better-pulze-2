@@ -6,6 +6,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema.messages import SystemMessage
 
 from router.domain.pricing import calculate_tokens_price
+from router.domain.pricing.entities import UsageDebug
 
 MODEL = "gpt-3.5-turbo-16k"
 chat = ChatOpenAI(model_name=MODEL, temperature=0, max_tokens=5)
@@ -26,7 +27,7 @@ Detected intent category:
 """
 
 
-def llm_call_intent(message: str) -> Tuple[str, str]:
+def llm_call_intent(message: str) -> Tuple[str, UsageDebug]:
     """
     Call the language model to classify the intent of a given message.
 
@@ -43,7 +44,7 @@ def llm_call_intent(message: str) -> Tuple[str, str]:
         return llm_output.content, calculate_tokens_price.cost(MODEL, cb.prompt_tokens, cb.completion_tokens)
 
 
-def detect_intent(message: str) -> Tuple[Intent, str]:
+def detect_intent(message: str) -> Tuple[Intent, UsageDebug]:
     """
     Detect user intent based on the message.
 
