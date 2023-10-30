@@ -35,9 +35,11 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIt
         res = await session.post(
             "https://api.openai.com/v1/chat/completions",
             headers={
-                "Authorization": authorization if authorization else f'Bearer {os.getenv("OPENAI_API_KEY")}'
+                "Authorization": authorization
+                if authorization
+                else f'Bearer {os.getenv("OPENAI_API_KEY")}'
             },
-            json=formatted_dict
+            json=formatted_dict,
         )
         async for line in res.content:
             try:
@@ -52,7 +54,9 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIt
     def trace(r):
         try:
             model = all_lines[0]["model"]
-            content = "".join([l['choices'][0]["delta"].get("content", "") for l in all_lines])
+            content = "".join(
+                [l["choices"][0]["delta"].get("content", "") for l in all_lines]
+            )
             return model, content
         except:
             return "", ""
@@ -65,14 +69,13 @@ async def _get_oai_streaming_response(authorization, formatted_dict):
         return session.post(
             "https://api.openai.com/v1/chat/completions",
             headers={
-                "Authorization": authorization if authorization else f'Bearer {os.getenv("OPENAI_API_KEY")}'
+                "Authorization": authorization
+                if authorization
+                else f'Bearer {os.getenv("OPENAI_API_KEY")}'
             },
-            json=formatted_dict
+            json=formatted_dict,
         )
 
 
 def _get_usage_response(usage: UsageDebug, usage_type: str) -> Dict:
-    return {
-        "type": usage_type,
-        **usage.__dict__
-    }
+    return {"type": usage_type, **usage.__dict__}

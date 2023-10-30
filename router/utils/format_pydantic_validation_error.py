@@ -11,15 +11,13 @@ class PydanticErrorResponseModel:
     message: Union[str, Dict]
 
 
-def _value_error_number_not_le_ge(
-        error: Dict) -> Optional[PydanticErrorResponseModel]:
+def _value_error_number_not_le_ge(error: Dict) -> Optional[PydanticErrorResponseModel]:
     loc = _get_loc(error)
     if not loc:
         return
     message: str = error.get("msg")
     message = message.replace("ensure this value is", "must be")
-    return PydanticErrorResponseModel(
-        code="value_error", message=f"{loc} {message}.")
+    return PydanticErrorResponseModel(code="value_error", message=f"{loc} {message}.")
 
 
 def _value_error_const(error: Dict) -> Optional[PydanticErrorResponseModel]:
@@ -33,7 +31,8 @@ def _value_error_const(error: Dict) -> Optional[PydanticErrorResponseModel]:
     return PydanticErrorResponseModel(
         code="invalid_enumeration",
         message=f"{loc} value {given_value} is not a valid enumeration "
-                f"member. Allowed values: {allowed_values}.")
+        f"member. Allowed values: {allowed_values}.",
+    )
 
 
 def _value_error_missing(error: Dict) -> Optional[PydanticErrorResponseModel]:
@@ -41,8 +40,8 @@ def _value_error_missing(error: Dict) -> Optional[PydanticErrorResponseModel]:
     if not loc:
         return
     return PydanticErrorResponseModel(
-        code="parameter_missing",
-        message=f"Missing required parameter: {loc}.")
+        code="parameter_missing", message=f"Missing required parameter: {loc}."
+    )
 
 
 def _type_error_enum(error: Dict) -> Optional[PydanticErrorResponseModel]:
@@ -57,7 +56,8 @@ def _type_error_enum(error: Dict) -> Optional[PydanticErrorResponseModel]:
     message = message[: message.find(";")]
     return PydanticErrorResponseModel(
         code="invalid_enumeration",
-        message=f"{message}. Allowed values: {allowed_values}.")
+        message=f"{message}. Allowed values: {allowed_values}.",
+    )
 
 
 def _type_error_generic(error: Dict) -> Optional[PydanticErrorResponseModel]:
@@ -66,9 +66,7 @@ def _type_error_generic(error: Dict) -> Optional[PydanticErrorResponseModel]:
         return
     message: str = error.get("msg")
     message = message.replace("value", loc)
-    return PydanticErrorResponseModel(
-        code="invalid_type",
-        message=f"{message}.")
+    return PydanticErrorResponseModel(code="invalid_type", message=f"{message}.")
 
 
 def _type_error_str(error: Dict) -> Optional[PydanticErrorResponseModel]:
@@ -77,8 +75,8 @@ def _type_error_str(error: Dict) -> Optional[PydanticErrorResponseModel]:
         return
     message: str = error.get("msg")
     return PydanticErrorResponseModel(
-        code="invalid_type",
-        message=f"{message} for {loc}.")
+        code="invalid_type", message=f"{message} for {loc}."
+    )
 
 
 def _get_loc(error) -> Optional[str]:
@@ -98,7 +96,7 @@ expected_errors = {
     "type_error.float": _type_error_generic,
     "type_error.list": _type_error_generic,
     "type_error.bool": _type_error_generic,
-    "type_error.str": _type_error_str
+    "type_error.str": _type_error_str,
 }
 
 
@@ -112,12 +110,8 @@ def execute(error: List[Dict]) -> Optional[PydanticErrorResponseModel]:
     except:
         pass
     try:
-        code = error.get("type", "unprocessable_entity").lower().replace(
-            ".", "_")
-        return PydanticErrorResponseModel(
-            code=code,
-            message=error
-        )
+        code = error.get("type", "unprocessable_entity").lower().replace(".", "_")
+        return PydanticErrorResponseModel(code=code, message=error)
     except:
         pass
     return

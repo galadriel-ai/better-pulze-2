@@ -14,7 +14,7 @@ from router.service.monitoring.utils import get_path_template
 REQUESTS = Counter(
     "llm_proxy_requests_total",
     "Total count of requests by method and path.",
-    ["method", "path_template", "chain"]
+    ["method", "path_template", "chain"],
 )
 RESPONSES = Counter(
     "llm_proxy_responses_total",
@@ -45,16 +45,16 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.filter_unhandled_paths = filter_unhandled_paths
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         start = time.time()
         method = request.method
         path_template, is_handled_path = get_path_template(request)
         if self._is_path_filtered(is_handled_path):
             return await call_next(request)
-        chain = request.query_params.get('chain')
-        REQUESTS.labels(method=method,
-                        chain=chain,
-                        path_template=path_template).inc()
+        chain = request.query_params.get("chain")
+        REQUESTS.labels(method=method, chain=chain, path_template=path_template).inc()
         before_time = time.perf_counter()
         time_elapsed = time.time() - start
         if time_elapsed > 1:
@@ -69,32 +69,35 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
                 path_template=path_template,
                 is_unexpected=is_unexpected,
                 chain=chain,
-                exception_type=type(e).__name__).inc()
+                exception_type=type(e).__name__,
+            ).inc()
             after_time = time.perf_counter()
-            REQUESTS_PROCESSING_TIME_ERRORS.labels(method=method,
-                                                   exception_type=type(e).__name__,
-                                                   chain=chain,
-                                                   path_template=path_template).observe(
-                after_time - before_time
-            )
+            REQUESTS_PROCESSING_TIME_ERRORS.labels(
+                method=method,
+                exception_type=type(e).__name__,
+                chain=chain,
+                path_template=path_template,
+            ).observe(after_time - before_time)
             raise e
         else:
             start = time.time()
             status_code = response.status_code
             after_time = time.perf_counter()
-            REQUESTS_PROCESSING_TIME.labels(method=method,
-                                            chain=chain,
-                                            path_template=path_template).observe(
-                after_time - before_time
-            )
+            REQUESTS_PROCESSING_TIME.labels(
+                method=method, chain=chain, path_template=path_template
+            ).observe(after_time - before_time)
         finally:
-            RESPONSES.labels(method=method,
-                             path_template=path_template,
-                             chain=chain,
-                             status_code=status_code,).inc()
+            RESPONSES.labels(
+                method=method,
+                path_template=path_template,
+                chain=chain,
+                status_code=status_code,
+            ).inc()
             time_elapsed = time.time() - start
             if time_elapsed > 1:
-                logger.debug(f"Middleware Prometheus after request time: {time_elapsed}")
+                logger.debug(
+                    f"Middleware Prometheus after request time: {time_elapsed}"
+                )
         return response
 
     def _is_path_filtered(self, is_handled_path: bool) -> bool:
@@ -110,4 +113,3 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         if isinstance(ex, APIErrorResponse):
             return ex.to_status_code()
         return HTTP_500_INTERNAL_SERVER_ERROR
-

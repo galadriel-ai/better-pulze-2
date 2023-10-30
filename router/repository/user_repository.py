@@ -12,7 +12,6 @@ DB_USERS_KEY = "users"
 
 
 class UserRepositoryFirebase:
-
     def __init__(self, key_path: str = "firebase_creds.json"):
         cred = credentials.Certificate(key_path)
         firebase_admin.initialize_app(cred)
@@ -27,11 +26,13 @@ class UserRepositoryFirebase:
 
     def create_user(self, user: User):
         doc_ref = self.db.collection(DB_USERS_KEY).document(user.uid)
-        doc_ref.set({
-            "email": user.email,
-            "user_role": user.user_role,
-            "api_key": "API-KEY2",  # TODO: create API key
-        })
+        doc_ref.set(
+            {
+                "email": user.email,
+                "user_role": user.user_role,
+                "api_key": "API-KEY2",  # TODO: create API key
+            }
+        )
 
     def get_user_by_api_key(self, api_key: str) -> Optional[User]:
         docs = (
@@ -40,9 +41,7 @@ class UserRepositoryFirebase:
             .stream()
         )
         for doc in docs:
-            return _firebase_doc_to_user(
-                user_uid=doc.id,
-                user_doc=doc.to_dict())
+            return _firebase_doc_to_user(user_uid=doc.id, user_doc=doc.to_dict())
 
 
 def _firebase_doc_to_user(user_uid: str, user_doc: Dict) -> User:
@@ -66,5 +65,5 @@ def _example_usage():
     print("\nget_user_by_api_key() result:\n", result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _example_usage()

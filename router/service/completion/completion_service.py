@@ -50,15 +50,14 @@ async def _get_oai_response(authorization, formatted_dict):
         res = await session.post(
             "https://api.openai.com/v1/chat/completions",
             headers={
-                "Authorization": authorization if authorization else f'Bearer {os.getenv("OPENAI_API_KEY")}'
+                "Authorization": authorization
+                if authorization
+                else f'Bearer {os.getenv("OPENAI_API_KEY")}'
             },
-            json=formatted_dict
+            json=formatted_dict,
         )
         return res.status, await res.json()
 
 
 def _get_usage_response(usage: UsageDebug, usage_type: str) -> Dict:
-    return {
-        "type": usage_type,
-        **usage.__dict__
-    }
+    return {"type": usage_type, **usage.__dict__}
