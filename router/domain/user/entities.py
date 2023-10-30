@@ -5,5 +5,6 @@ from dataclasses import dataclass
 class User:
     uid: str
     email: str
+    api_key: str
 
     user_role: str = "developer"

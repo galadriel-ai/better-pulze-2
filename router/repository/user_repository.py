@@ -1,7 +1,9 @@
+from dataclasses import dataclass
 from typing import Dict
 from typing import Optional
 
 import firebase_admin
+from firebase_admin import auth
 from firebase_admin import credentials
 from firebase_admin import firestore
 from google.cloud.firestore_v1 import FieldFilter
@@ -11,11 +13,27 @@ from router.domain.user.entities import User
 DB_USERS_KEY = "users"
 
 
+@dataclass(frozen=True)
+class ValidatedUser:
+    uid: str
+    email: str
+
+
 class UserRepositoryFirebase:
     def __init__(self, key_path: str = "firebase_creds.json"):
         cred = credentials.Certificate(key_path)
-        firebase_admin.initialize_app(cred)
+        self.auth = firebase_admin.initialize_app(cred)
         self.db = firestore.client()
+
+    def validate_user(self, id_token: str) -> Optional[ValidatedUser]:
+        """
+        id_token - Firebase created jwt access token
+
+        Returns:
+            ValidatedUser that is data from jwt id_token
+        """
+        decoded_token = auth.verify_id_token(id_token)
+        return ValidatedUser(uid=decoded_token["uid"], email=decoded_token["email"])
 
     def get_user(self, user_uid: str) -> Optional[User]:
         doc_ref = self.db.collection(DB_USERS_KEY).document(user_uid)
@@ -30,7 +48,7 @@ class UserRepositoryFirebase:
             {
                 "email": user.email,
                 "user_role": user.user_role,
-                "api_key": "API-KEY2",  # TODO: create API key
+                "api_key": user.api_key,
             }
         )
 
@@ -49,6 +67,7 @@ def _firebase_doc_to_user(user_uid: str, user_doc: Dict) -> User:
         uid=user_uid,
         email=user_doc["email"],
         user_role=user_doc["user_role"],
+        api_key=user_doc["api_key"],
     )
 
 

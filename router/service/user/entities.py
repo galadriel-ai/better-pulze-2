@@ -1,9 +1,11 @@
 from pydantic import BaseModel, Field
 
 
-class GetUserRequest(BaseModel):
-    email: str = Field(description="User email")
-
-
 class GetUserResponse(BaseModel):
-    email: str = Field(description="user email")
+    email: str = Field(description="User email")
+    api_key: str = Field(description="User api_key")
+    user_role: str = Field(description="User user_role")
+
+
+class CreateUserRequest(BaseModel):
+    user_role: str = Field(description="User role")
