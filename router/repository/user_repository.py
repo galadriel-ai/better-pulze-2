@@ -74,8 +74,10 @@ def _firebase_doc_to_user(user_uid: str, user_doc: Dict) -> User:
 def _example_usage():
     repository = UserRepositoryFirebase()
     user = User(
-        uid="n8dZgC470BTfk6W5Mxpr26Ut72E4",
-        email="mock@mock.com",
+        uid="lA74QCJ2RydEPJtxNbjscxErGap1",
+        email="kristjan@thesentinel.ai",
+        api_key="Mock",
+        user_role="role",
     )
     repository.create_user(user)
     result = repository.get_user(user.uid)
