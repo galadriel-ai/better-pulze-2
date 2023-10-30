@@ -1,3 +1,5 @@
+import secrets
+
 from router.domain.user.entities import User
 from router.repository.user_repository import UserRepositoryFirebase
 from router.repository.user_repository import ValidatedUser
@@ -14,7 +16,7 @@ def execute(
         User(
             uid=validated_user.uid,
             email=validated_user.email,
-            api_key="MOCK-KEY",  # TODO: create proper
+            api_key=_create_api_key(),
             user_role=payload.user_role,
         )
     )
@@ -22,3 +24,19 @@ def execute(
     return GetUserResponse(
         email=user.email, api_key=user.api_key, user_role=user.user_role
     )
+
+
+def _create_api_key():
+    def is_last_4_digits_alpha(_secret):
+        return (
+            _secret[-1].isalpha()
+            and _secret[-2].isalpha()
+            and _secret[-3].isalpha()
+            and _secret[-4].isalpha()
+        )
+
+    while True:
+        secret = secrets.token_urlsafe(36)
+        if secret[0].isalpha() and is_last_4_digits_alpha(secret):
+            return "sk-" + secret
+
