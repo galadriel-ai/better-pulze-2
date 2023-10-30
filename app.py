@@ -6,11 +6,13 @@ from starlette.middleware.cors import CORSMiddleware
 import settings
 from router.routers import main_router
 from router.routers import routing_utils
-from router.service.exception_handlers.exception_handlers import \
-    custom_exception_handler
+from router.service.exception_handlers.exception_handlers import (
+    custom_exception_handler,
+)
 from router.service.middleware.main_middleware import MainMiddleware
-from router.service.middleware.request_enrichment_middleware import \
-    RequestEnrichmentMiddleware
+from router.service.middleware.request_enrichment_middleware import (
+    RequestEnrichmentMiddleware,
+)
 from router.service.monitoring.prometheus_metrics_endpoint import metrics
 from router.service.monitoring.prometheus_middleware import PrometheusMiddleware
 
@@ -35,7 +37,7 @@ class ApiInfo(BaseModel):
             "example": {
                 "title": API_TITLE,
                 "description": API_DESCRIPTION,
-                "version": API_VERSION
+                "version": API_VERSION,
             }
         }
 
@@ -49,22 +51,12 @@ def custom_openapi():
         version="1.0.0",
         description="API version 1.0.0",
         routes=app.routes,
-        servers=_get_servers()
+        servers=_get_servers(),
     )
-    openapi_schema["info"]["contact"] = {
-        "name": "",
-        "email": ""
-    }
-    openapi_schema["info"]["x-logo"] = {
-        "url": ""
-    }
+    openapi_schema["info"]["contact"] = {"name": "", "email": ""}
+    openapi_schema["info"]["x-logo"] = {"url": ""}
     openapi_schema["x-readme"] = {
-        "samples-languages": [
-            "curl",
-            "node",
-            "javascript",
-            "python"
-        ]
+        "samples-languages": ["curl", "node", "javascript", "python"]
     }
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -108,11 +100,7 @@ app.add_exception_handler(Exception, custom_exception_handler)
 
 
 def get_api_info() -> ApiInfo:
-    return ApiInfo(
-        title=API_VERSION,
-        description=API_DESCRIPTION,
-        version=API_VERSION
-    )
+    return ApiInfo(title=API_VERSION, description=API_DESCRIPTION, version=API_VERSION)
 
 
 @app.get(
@@ -120,7 +108,8 @@ def get_api_info() -> ApiInfo:
     summary="Returns API information",
     description="Returns API information",
     response_description="API information with title, description and version.",
-    response_model=ApiInfo)
+    response_model=ApiInfo,
+)
 def root():
     return routing_utils.to_json_response(get_api_info().dict())
 

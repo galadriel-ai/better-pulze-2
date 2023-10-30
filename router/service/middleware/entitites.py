@@ -5,6 +5,7 @@ class RequestStateKey(str, Enum):
     """
     Keys for using request store to transfer information between http middlewares
     """
+
     REQUEST_ID = "request_id"
     REQUEST_SOURCE = "request_source"
     REQUEST_ORIGIN = "request_origin"

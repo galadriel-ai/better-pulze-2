@@ -1,5 +1,9 @@
-from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, CollectorRegistry, \
-    generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    REGISTRY,
+    CollectorRegistry,
+    generate_latest,
+)
 from prometheus_client.multiprocess import MultiProcessCollector
 from starlette.responses import Response
 from starlette.requests import Request
@@ -14,6 +18,5 @@ def metrics(request: Request) -> Response:
     else:
         registry = REGISTRY
     return Response(
-        generate_latest(registry),
-        headers={"Content-Type": CONTENT_TYPE_LATEST}
+        generate_latest(registry), headers={"Content-Type": CONTENT_TYPE_LATEST}
     )

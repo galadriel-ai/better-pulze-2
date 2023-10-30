@@ -18,8 +18,9 @@ class APIErrorResponse(Exception):
 
 
 InternalServerErrorCode = "internal_server_error"
-InternalServerErrorMessage = "The request could not be completed due to an " \
-                             "internal server error."
+InternalServerErrorMessage = (
+    "The request could not be completed due to an " "internal server error."
+)
 
 
 class InternalServerAPIError(APIErrorResponse):
@@ -39,7 +40,6 @@ class InternalServerAPIError(APIErrorResponse):
 
 
 class ValidationAPIError(APIErrorResponse):
-
     def __init__(self, param: str):
         self.param = param
 
@@ -80,14 +80,15 @@ class BadGatewayAPIError(APIErrorResponse):
         return "bad_gateway"
 
     def to_message(self) -> str:
-        return "The request could not be completed due to the server " \
-               "receiving an invalid response from an inbound server it " \
-               "accessed while attempting to fulfill the request. " \
-               "Check if LLM is running."
+        return (
+            "The request could not be completed due to the server "
+            "receiving an invalid response from an inbound server it "
+            "accessed while attempting to fulfill the request. "
+            "Check if LLM is running."
+        )
 
 
 class AuthorizationMissingAPIError(APIErrorResponse):
-
     def __init__(self):
         pass
 
@@ -102,7 +103,6 @@ class AuthorizationMissingAPIError(APIErrorResponse):
 
 
 class InvalidCredentialsAPIError(APIErrorResponse):
-
     def __init__(self):
         pass
 
@@ -117,7 +117,6 @@ class InvalidCredentialsAPIError(APIErrorResponse):
 
 
 class RateLimitExceededAPIError(APIErrorResponse):
-
     def __init__(self):
         pass
 

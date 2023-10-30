@@ -43,19 +43,27 @@ def cost(model: str, n_input_tokens: int, n_output_tokens: int) -> UsageDebug:
             prompt_tokens=n_input_tokens,
             completion_tokens=n_output_tokens,
             total_tokens=n_input_tokens + n_output_tokens,
-            price="0"
+            price="0",
         )
     pricing = price1K[model]
     if isinstance(pricing, tuple):
-        price = str((Decimal(pricing[0]) * n_input_tokens + Decimal(pricing[1]) * n_output_tokens) / Decimal(1000))
+        price = str(
+            (
+                Decimal(pricing[0]) * n_input_tokens
+                + Decimal(pricing[1]) * n_output_tokens
+            )
+            / Decimal(1000)
+        )
     else:
-        price = str(Decimal(pricing) * Decimal(n_input_tokens + n_output_tokens) / Decimal(1000))
+        price = str(
+            Decimal(pricing) * Decimal(n_input_tokens + n_output_tokens) / Decimal(1000)
+        )
     return UsageDebug(
         model=model,
         prompt_tokens=n_input_tokens,
         completion_tokens=n_output_tokens,
         total_tokens=n_input_tokens + n_output_tokens,
-        price=price
+        price=price,
     )
 
 

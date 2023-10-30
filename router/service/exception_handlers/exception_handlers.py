@@ -17,10 +17,7 @@ from router.utils import http_headers
 from router.utils.format_pydantic_validation_error import PydanticErrorResponseModel
 
 
-async def custom_exception_handler(
-        request: Request,
-        error: Exception
-):
+async def custom_exception_handler(request: Request, error: Exception):
     if not isinstance(error, APIErrorResponse):
         error = InternalServerAPIError()
     return await http_headers.add_response_headers(
@@ -32,18 +29,25 @@ async def custom_exception_handler(
                     "error": {
                         "status_code": error.to_status_code(),
                         "code": error.to_code(),
-                        "message": error.to_message()
-                    }
+                        "message": error.to_message(),
+                    },
                 }
-            )
-        ), None
+            ),
+        ),
+        None,
     )
 
 
 def process_for_multipart_form_error(response_json: dict):
-    if response_json.get('error', {}).get('message', '').find("Missing boundary in multipart..") > -1:
-        response_json['error'][
-            'message'] = 'The request is missing a file to be uploaded. Please attach a file in the body of the request'
+    if (
+        response_json.get("error", {})
+        .get("message", "")
+        .find("Missing boundary in multipart..")
+        > -1
+    ):
+        response_json["error"][
+            "message"
+        ] = "The request is missing a file to be uploaded. Please attach a file in the body of the request"
     return response_json
 
 
@@ -56,29 +60,23 @@ async def custom_http_exception_handler(request, exc):
             message = _js.pop("detail") + "."
             _js["error"] = {
                 "status_code": response.status_code,
-                "code": responses[
-                    response.status_code].lower().replace(" ", "_"),
-                "message": message
+                "code": responses[response.status_code].lower().replace(" ", "_"),
+                "message": message,
             }
             _js = process_for_multipart_form_error(_js)
             return JSONResponse(
-                status_code=response.status_code,
-                content=jsonable_encoder(_js)
+                status_code=response.status_code, content=jsonable_encoder(_js)
             )
     except:
         pass
     return response
 
 
-async def validation_exception_handler(
-        request: Request,
-        exc: RequestValidationError
-):
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
     response = await request_validation_exception_handler(request, exc)
     error: Optional[PydanticErrorResponseModel]
     try:
-        if error := format_pydantic_validation_error.execute(
-                exc.errors()):
+        if error := format_pydantic_validation_error.execute(exc.errors()):
             return JSONResponse(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 content=jsonable_encoder(
@@ -87,8 +85,8 @@ async def validation_exception_handler(
                         "error": {
                             "status_code": status.HTTP_422_UNPROCESSABLE_ENTITY,
                             "code": error.code,
-                            "message": error.message
-                        }
+                            "message": error.message,
+                        },
                     }
                 ),
             )

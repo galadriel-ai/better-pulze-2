@@ -16,18 +16,20 @@ logger = api_logger.get()
 
 class RequestEnrichmentMiddleware(BaseHTTPMiddleware):
     def __init__(
-            self,
-            app: ASGIApp,
+        self,
+        app: ASGIApp,
     ) -> None:
         super().__init__(app)
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         start = time.time()
         request_id = uuid.uuid4()
 
-        request_source = request.headers.get('source')
-        request_origin = request.headers.get('origin')
-        request_user_agent = request.headers.get('user-agent')
+        request_source = request.headers.get("source")
+        request_origin = request.headers.get("origin")
+        request_user_agent = request.headers.get("user-agent")
         ip_address = request.headers.get("x-forwarded-for", "").split(",")[0]
 
         util.set_state(request, RequestStateKey.REQUEST_ID, request_id)

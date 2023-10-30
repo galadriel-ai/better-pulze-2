@@ -25,7 +25,7 @@ class CostEvaluator(RunEvaluator):
         self.cost_type = cost_type
 
     def evaluate_run(
-            self, run: Run, example: Optional[Example] = None
+        self, run: Run, example: Optional[Example] = None
     ) -> EvaluationResult:
         if run.outputs is None:
             raise ValueError("Run outputs cannot be None")
@@ -33,13 +33,14 @@ class CostEvaluator(RunEvaluator):
         llm_output = run.outputs["llm_output"]
         price = llm_output.get("price")
         if price:
-            return EvaluationResult(key="Price e6", score=int(Decimal(price) * Decimal(10**6)))
+            return EvaluationResult(
+                key="Price e6", score=int(Decimal(price) * Decimal(10**6))
+            )
         else:
             raise Exception(f"Don't know how to calculate cost type {self.cost_type}")
 
 
 class CustomChatOpenAI(ChatOpenAI):
-
     def _create_chat_result(self, response: Mapping[str, Any]) -> ChatResult:
         generations = []
         for res in response["choices"]:
@@ -50,16 +51,17 @@ class CustomChatOpenAI(ChatOpenAI):
             )
             generations.append(gen)
         token_usage = response.get("usage", {})
-        llm_output = {"token_usage": token_usage, "model_name": self.model_name, "price": response.get("price"),
-                      "usage_debug": response.get("usage_debug")}
+        llm_output = {
+            "token_usage": token_usage,
+            "model_name": self.model_name,
+            "price": response.get("price"),
+            "usage_debug": response.get("usage_debug"),
+        }
         return ChatResult(generations=generations, llm_output=llm_output)
 
 
 def make_router():
-    return CustomChatOpenAI(
-        openai_api_base="http://127.0.0.1:5000/v1",
-        temperature=0.
-    )
+    return CustomChatOpenAI(openai_api_base="http://127.0.0.1:5000/v1", temperature=0.0)
 
 
 eval_config = RunEvalConfig(
@@ -69,7 +71,7 @@ eval_config = RunEvalConfig(
     custom_evaluators=[
         CostEvaluator(cost_type="total"),
         CostEvaluator(cost_type="in"),
-        CostEvaluator(cost_type="out")
+        CostEvaluator(cost_type="out"),
     ],
 )
 run_on_dataset(

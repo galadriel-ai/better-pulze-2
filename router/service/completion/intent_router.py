@@ -14,6 +14,7 @@ chat = ChatOpenAI(model_name=MODEL, temperature=0, max_tokens=5)
 
 class Intent(enum.Enum):
     """Enumeration for classifying user intent."""
+
     REASONING = enum.auto()
     SUMMARIZING = enum.auto()
     OTHER = enum.auto()
@@ -41,7 +42,9 @@ def llm_call_intent(message: str) -> Tuple[str, UsageDebug]:
     llm_input = [SystemMessage(content=INTENT_DETECTION_PROMPT.format(message=message))]
     with get_openai_callback() as cb:
         llm_output = chat(llm_input, max_tokens=5, stop=["\n"])
-        return llm_output.content, calculate_tokens_price.cost(MODEL, cb.prompt_tokens, cb.completion_tokens)
+        return llm_output.content, calculate_tokens_price.cost(
+            MODEL, cb.prompt_tokens, cb.completion_tokens
+        )
 
 
 def detect_intent(message: str) -> Tuple[Intent, UsageDebug]:
