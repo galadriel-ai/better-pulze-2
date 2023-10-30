@@ -1,0 +1,70 @@
+from typing import Dict
+from typing import Optional
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+from google.cloud.firestore_v1 import FieldFilter
+
+from router.domain.user.entities import User
+
+DB_USERS_KEY = "users"
+
+
+class UserRepositoryFirebase:
+
+    def __init__(self, key_path: str = "firebase_creds.json"):
+        cred = credentials.Certificate(key_path)
+        firebase_admin.initialize_app(cred)
+        self.db = firestore.client()
+
+    def get_user(self, user_uid: str) -> Optional[User]:
+        doc_ref = self.db.collection(DB_USERS_KEY).document(user_uid)
+        doc = doc_ref.get()
+        if doc.exists:
+            user_doc = doc.to_dict()
+            return _firebase_doc_to_user(user_uid, user_doc)
+
+    def create_user(self, user: User):
+        doc_ref = self.db.collection(DB_USERS_KEY).document(user.uid)
+        doc_ref.set({
+            "email": user.email,
+            "user_role": user.user_role,
+            "api_key": "API-KEY2",  # TODO: create API key
+        })
+
+    def get_user_by_api_key(self, api_key: str) -> Optional[User]:
+        docs = (
+            self.db.collection(DB_USERS_KEY)
+            .where(filter=FieldFilter("api_key", "==", api_key))
+            .stream()
+        )
+        for doc in docs:
+            return _firebase_doc_to_user(
+                user_uid=doc.id,
+                user_doc=doc.to_dict())
+
+
+def _firebase_doc_to_user(user_uid: str, user_doc: Dict) -> User:
+    return User(
+        uid=user_uid,
+        email=user_doc["email"],
+        user_role=user_doc["user_role"],
+    )
+
+
+def _example_usage():
+    repository = UserRepositoryFirebase()
+    user = User(
+        uid="n8dZgC470BTfk6W5Mxpr26Ut72E4",
+        email="mock@mock.com",
+    )
+    repository.create_user(user)
+    result = repository.get_user(user.uid)
+    print("\nget_user() result:\n", result)
+    result = repository.get_user_by_api_key("API-KEY2")
+    print("\nget_user_by_api_key() result:\n", result)
+
+
+if __name__ == '__main__':
+    _example_usage()

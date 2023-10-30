@@ -14,10 +14,5 @@ logger = api_logger.get()
 routers_to_include: List[APIRouter] = [
     router_router.router,
 ]
-route_titles = []
 for router_to_include in routers_to_include:
     router.include_router(router_to_include)
-    route_titles.append({
-        "title": router_to_include.title,
-        "tags": router_to_include.openapi_tags
-    })
