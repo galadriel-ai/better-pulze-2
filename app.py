@@ -65,6 +65,7 @@ def custom_openapi():
 def _get_servers():
     servers = []
     if settings.is_production():
+        servers.append({"url": "https://api.llmos.dev/"})
         servers.append({"url": "https://llm.sidekik.ai/"})
     else:
         base_url = settings.API_BASE_URL
