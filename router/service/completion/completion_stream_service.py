@@ -33,7 +33,7 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIt
             headers={
                 "Authorization": authorization
                 if authorization
-                else f'Bearer {os.getenv("OPENAI_API_KEY")}'
+                else f'Bearer {os.getenv("PERPLEXITY_API_KEY")}'
             },
             json=formatted_dict,
         )
@@ -63,11 +63,11 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIt
 async def _get_oai_streaming_response(authorization, formatted_dict):
     async with aiohttp.ClientSession() as session:
         return session.post(
-            "https://api.openai.com/v1/chat/completions",
+            "https://api.perplexity.ai/chat/completions",
             headers={
                 "Authorization": authorization
                 if authorization
-                else f'Bearer {os.getenv("OPENAI_API_KEY")}'
+                else f'Bearer {os.getenv("PERPLEXITY_API_KEY")}'
             },
             json=formatted_dict,
         )
