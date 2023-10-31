@@ -19,15 +19,21 @@ class GetUserResponse(BaseModel):
 
     @classmethod
     def from_user(cls, user: User):
-        return GetUserResponse(
+        response = GetUserResponse(
             email=user.email,
             api_key=user.api_key,
-            user_role=user.user_role,
-            building=user.building,
-            has_paying_customers=user.has_paying_customers,
-            project_stage=user.project_stage,
-            llm_monthly_cost=user.llm_monthly_cost,
         )
+        if user.user_role:
+            response.user_role = user.user_role
+        if user.building:
+            response.building = user.building
+        if user.has_paying_customers is not None:
+            response.has_paying_customers = user.has_paying_customers
+        if user.project_stage:
+            response.project_stage = user.project_stage
+        if user.llm_monthly_cost:
+            response.llm_monthly_cost = user.llm_monthly_cost
+        return response
 
 
 class CreateUserRequest(BaseModel):
