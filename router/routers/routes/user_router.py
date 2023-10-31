@@ -16,7 +16,7 @@ router.tags = [TAG]
 
 logger = api_logger.get()
 
-user_repository = UserRepositoryFirebase()
+user_repository = UserRepositoryFirebase.instance()
 id_token_validator = IdTokenValidator(user_repository)
 
 
