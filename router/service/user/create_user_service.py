@@ -18,12 +18,14 @@ def execute(
             email=validated_user.email,
             api_key=_create_api_key(),
             user_role=payload.user_role,
+            building=payload.building,
+            has_paying_customers=payload.has_paying_customers,
+            project_stage=payload.project_stage,
+            llm_monthly_cost=payload.llm_monthly_cost,
         )
     )
     user = user_repository.get_user(validated_user.uid)
-    return GetUserResponse(
-        email=user.email, api_key=user.api_key, user_role=user.user_role
-    )
+    return GetUserResponse.from_user(user)
 
 
 def _create_api_key():
@@ -38,5 +40,4 @@ def _create_api_key():
     while True:
         secret = secrets.token_urlsafe(36)
         if secret[0].isalpha() and is_last_4_digits_alpha(secret):
-            return "sk-" + secret
-
+            return "lo-" + secret

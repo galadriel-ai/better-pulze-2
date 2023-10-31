@@ -31,7 +31,7 @@ async def get_user(
 
 
 @router.post("/v1/user", response_model=GetUserResponse)
-async def create_user(
+async def update_user(
     payload: CreateUserRequest,
     validated_user: ValidatedUser = Depends(id_token_validator.validate),
 ):

@@ -52,7 +52,7 @@ class Singleton:
             return self._instance
 
     def __call__(self):
-        raise TypeError('Singletons must be accessed through `instance()`.')
+        raise TypeError("Singletons must be accessed through `instance()`.")
 
     def __instancecheck__(self, inst):
         return isinstance(inst, self._decorated)
@@ -78,27 +78,17 @@ class UserRepositoryFirebase:
     def validate_api_key(self, api_key: str) -> Optional[ValidatedUser]:
         user = self.get_user_by_api_key(api_key=api_key)
         if user:
-            return ValidatedUser(
-                uid=user.uid,
-                email=user.email
-            )
+            return ValidatedUser(uid=user.uid, email=user.email)
 
     def get_user(self, user_uid: str) -> Optional[User]:
         doc_ref = self.db.collection(DB_USERS_KEY).document(user_uid)
         doc = doc_ref.get()
         if doc.exists:
-            user_doc = doc.to_dict()
-            return _firebase_doc_to_user(user_uid, user_doc)
+            return User.from_dict(uid=doc.id, user_dict=doc.to_dict())
 
     def create_user(self, user: User):
         doc_ref = self.db.collection(DB_USERS_KEY).document(user.uid)
-        doc_ref.set(
-            {
-                "email": user.email,
-                "user_role": user.user_role,
-                "api_key": user.api_key,
-            }
-        )
+        doc_ref.set(user.to_dict())
 
     def get_user_by_api_key(self, api_key: str) -> Optional[User]:
         docs = (
@@ -107,20 +97,11 @@ class UserRepositoryFirebase:
             .stream()
         )
         for doc in docs:
-            return _firebase_doc_to_user(user_uid=doc.id, user_doc=doc.to_dict())
-
-
-def _firebase_doc_to_user(user_uid: str, user_doc: Dict) -> User:
-    return User(
-        uid=user_uid,
-        email=user_doc["email"],
-        user_role=user_doc["user_role"],
-        api_key=user_doc["api_key"],
-    )
+            return User.from_dict(uid=doc.id, user_dict=doc.to_dict())
 
 
 def _example_usage():
-    repository = UserRepositoryFirebase()
+    repository = UserRepositoryFirebase.instance()
     user = User(
         uid="lA74QCJ2RydEPJtxNbjscxErGap1",
         email="kristjan@thesentinel.ai",

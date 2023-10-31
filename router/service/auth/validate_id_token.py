@@ -28,7 +28,6 @@ class IdTokenValidator:
 
 
 class ApiKeyValidator:
-
     def __init__(self, user_repository: UserRepositoryFirebase):
         self.user_repository = user_repository
 
