@@ -38,6 +38,10 @@ class ApiKeyValidator:
             if not api_key_header:
                 raise error_responses.AuthorizationMissingAPIError()
 
+            if not api_key_header.startswith("Bearer "):
+                raise error_responses.InvalidCredentialsAPIError()
+
+            api_key_header = api_key_header.replace("Bearer ", "")
             result = self.user_repository.validate_api_key(api_key_header)
             if result:
                 return result
