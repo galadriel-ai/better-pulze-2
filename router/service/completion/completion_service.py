@@ -15,7 +15,7 @@ from router.service.completion.intent_router import detect_intent, Intent
 @traceable(run_type="chain", name="CompletionService")
 async def execute(request: ChatCompletionRequest, authorization=None) -> JSONResponse:
     # Clean up etc
-    request.model = "mistral-7b-instruct"
+    request.model = "mistralai/Mistral-7B-v0.1"
     request_input = request.model_dump()
     
     for m in request_input["messages"]:
@@ -37,7 +37,7 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> JSONRes
 async def _get_oai_response(authorization, formatted_dict):
     async with aiohttp.ClientSession() as session:
         res = await session.post(
-            "https://api.perplexity.ai/chat/completions",
+            "http://10.138.0.4:8000/v1/chat/completions",
             headers={
                 "Authorization": authorization
                 if authorization
