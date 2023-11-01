@@ -14,7 +14,7 @@ class RateLimiter:
 
     def is_rate_limited(self, formatted_ip: str):
         count = self.usage_repository.get_last_hour_usage_count(ip_address=formatted_ip)
-        if count <= self.max_calls_per_hour:
+        if count < self.max_calls_per_hour:
             self.usage_repository.track_usage(formatted_ip)
             return False
         return True
