@@ -120,8 +120,8 @@ class InvalidCredentialsAPIError(APIErrorResponse):
 
 
 class RateLimitExceededAPIError(APIErrorResponse):
-    def __init__(self):
-        pass
+    def __init__(self, message_extra: str):
+        self.message_extra = message_extra
 
     def to_status_code(self) -> status:
         return status.HTTP_429_TOO_MANY_REQUESTS
@@ -130,4 +130,7 @@ class RateLimitExceededAPIError(APIErrorResponse):
         return "rate_limit_exceeded"
 
     def to_message(self) -> str:
-        return "Rate limit exceeded"
+        result = "Rate limit exceeded"
+        if self.message_extra:
+            result += f" - {self.message_extra}"
+        return result

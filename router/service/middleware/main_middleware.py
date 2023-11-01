@@ -48,7 +48,9 @@ class MainMiddleware(BaseHTTPMiddleware):
                     f"message={error.to_message()}",
                     exc_info=is_exc_info
                 )"""
-                raise RateLimitExceededAPIError()
+                raise RateLimitExceededAPIError(
+                    "demo-api-key supports only 5 reqs per hour"
+                )
         try:
             logger.info(
                 f"REQUEST STARTED "
