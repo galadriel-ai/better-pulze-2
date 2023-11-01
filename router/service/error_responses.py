@@ -103,8 +103,8 @@ class AuthorizationMissingAPIError(APIErrorResponse):
 
 
 class InvalidCredentialsAPIError(APIErrorResponse):
-    def __init__(self):
-        pass
+    def __init__(self, message_extra: str = None):
+        self.message_extra = message_extra
 
     def to_status_code(self) -> status:
         return status.HTTP_401_UNAUTHORIZED
@@ -113,7 +113,10 @@ class InvalidCredentialsAPIError(APIErrorResponse):
         return "invalid_credentials"
 
     def to_message(self) -> str:
-        return "Invalid credentials"
+        result = "Invalid credentials"
+        if self.message_extra:
+            result += f" - {self.message_extra}"
+        return result
 
 
 class RateLimitExceededAPIError(APIErrorResponse):

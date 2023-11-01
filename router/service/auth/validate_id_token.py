@@ -57,18 +57,25 @@ class ApiKeyValidator:
 
     async def validate(
         self, api_key_header: str = Security(API_KEY_HEADER)
-    ) -> Optional[str]:
-        try:
-            if not api_key_header:
-                raise error_responses.AuthorizationMissingAPIError()
+    ) -> Optional[ValidatedUser]:
+        if not api_key_header:
+            raise error_responses.AuthorizationMissingAPIError()
 
-            if not api_key_header.startswith("Bearer "):
-                raise error_responses.InvalidCredentialsAPIError()
+        if not api_key_header.startswith("Bearer "):
+            raise error_responses.InvalidCredentialsAPIError(
+                message_extra="Authorization header needs to start with 'Bearer '"
+            )
 
-            api_key_header = api_key_header.replace("Bearer ", "")
-            result = self.user_repository.validate_api_key(api_key_header)
-            if result:
-                return result
-        except Exception as exc:
-            pass
-        raise error_responses.InvalidCredentialsAPIError()
+        api_key_header = api_key_header.replace("Bearer ", "")
+        if not api_key_header.startswith("lo-"):
+            raise error_responses.InvalidCredentialsAPIError(
+                message_extra="API Key needs to start with 'lo-'. Please make sure "
+                              "you using llmos.dev API Key."
+            )
+
+        result = self.user_repository.validate_api_key(api_key_header)
+        if result:
+            return result
+        raise error_responses.InvalidCredentialsAPIError(
+            message_extra="API Key not found."
+        )
