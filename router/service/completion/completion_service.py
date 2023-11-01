@@ -1,23 +1,21 @@
 import os
-from _decimal import Decimal
 from typing import Dict
 
 import aiohttp
 from langsmith import traceable
 from starlette.responses import JSONResponse
 
-from router.domain.pricing import calculate_tokens_price
 from router.domain.pricing.entities import UsageDebug
+from router.domain.tokens.token_tracker import TokenTracker
 from router.service.completion.entities import ChatCompletionRequest
-from router.service.completion.intent_router import detect_intent, Intent
 
 
 @traceable(run_type="chain", name="CompletionService")
-async def execute(request: ChatCompletionRequest, authorization=None) -> JSONResponse:
+async def execute(request: ChatCompletionRequest, token_tracker: TokenTracker, authorization=None) -> JSONResponse:
     # Clean up etc
     request.model = "mistralai/Mistral-7B-Instruct-v0.1"
     request_input = request.model_dump()
-    
+
     for m in request_input["messages"]:
         if not m.get("function_call"):
             m.pop("name", None)

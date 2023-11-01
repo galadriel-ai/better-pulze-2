@@ -1,10 +1,9 @@
-import time
-
-from fastapi import APIRouter, Header
+from fastapi import APIRouter
 from fastapi import Depends
 from starlette.responses import StreamingResponse
 
 from router import api_logger
+from router.domain.tokens.token_tracker import TokenTracker
 from router.repository.user_repository import UserRepositoryFirebase
 from router.repository.user_repository import ValidatedUser
 from router.service.auth.validate_id_token import ApiKeyValidator
@@ -30,15 +29,19 @@ async def endpoint(
     request: ChatCompletionRequest,
     validated_user: ValidatedUser = Depends(api_key_validator.validate),
 ):
+    token_tracker = TokenTracker(
+        method="POST",
+        path_template="/v1/chat/completions",
+    )
     if not request.stream:
-        return await completion_service.execute(request)
+        return await completion_service.execute(request, token_tracker)
     else:
         headers = {
             "X-Content-Type-Options": "nosniff",
             "Connection": "keep-alive",
         }
         return StreamingResponse(
-            completion_stream_service.execute(request),
+            completion_stream_service.execute(request, token_tracker),
             headers=headers,
             media_type="text/event-stream",
         )
