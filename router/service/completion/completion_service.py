@@ -11,7 +11,9 @@ from router.service.completion.entities import ChatCompletionRequest
 
 
 @traceable(run_type="chain", name="CompletionService")
-async def execute(request: ChatCompletionRequest, token_tracker: TokenTracker, authorization=None) -> JSONResponse:
+async def execute(
+    request: ChatCompletionRequest, token_tracker: TokenTracker, authorization=None
+) -> JSONResponse:
     # Clean up etc
     request.model = "mistralai/Mistral-7B-Instruct-v0.1"
     request_input = request.model_dump()
