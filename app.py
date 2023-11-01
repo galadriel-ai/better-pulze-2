@@ -131,18 +131,18 @@ def metrics_app():
         '\nllm_proxy_llm_total_tokens_grand_sum{model_name="'
         + model_name
         + '"} '
-        + str(usage["completion_tokens"])
+        + str(usage["total_tokens"])
     )
     result += (
         '\nllm_proxy_llm_completion_tokens_grand_sum{model_name="'
         + model_name
         + '"} '
-        + str(usage["prompt_tokens"])
+        + str(usage["completion_tokens"])
     )
     result += (
         '\nllm_proxy_llm_prompt_tokens_grand_sum{model_name="'
         + model_name
         + '"} '
-        + str(usage["total_tokens"])
+        + str(usage["prompt_tokens"])
     )
     return result
