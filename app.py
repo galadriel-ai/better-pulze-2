@@ -120,7 +120,7 @@ def root():
 app.add_route("/metrics", metrics)
 
 
-@app.get("/metrics-app", response_class=PlainTextResponse)
+@app.get("/metrics-app", response_class=PlainTextResponse, include_in_schema=False)
 def metrics_app():
     model_name = "mistralai/Mistral-7B-Instruct-v0.1"
 
