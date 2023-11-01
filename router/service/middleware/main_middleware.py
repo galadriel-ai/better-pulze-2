@@ -1,38 +1,27 @@
-import time
-
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
+import settings
 from router import api_logger
+from router.repository.demo_user_repository import DemoUserRepositoryFirebase
 from router.service.error_responses import APIErrorResponse
 from router.service.error_responses import RateLimitExceededAPIError
 from router.service.middleware import util
 from router.service.middleware.entitites import RequestStateKey
+from router.service.middleware.rate_limiter import RateLimiter
 from router.utils.http_headers import add_response_headers
 import time
-from collections import defaultdict
 
 logger = api_logger.get()
 
-
-class RateLimiter:
-    def __init__(self, max_calls_per_hour):
-        self.calls = defaultdict(list)
-        self.max_calls_per_hour = max_calls_per_hour
-
-    def is_rate_limited(self, s):
-        now = time.time()
-        one_hour_ago = now - 3600
-        self.calls[s] = [t for t in self.calls[s] if t > one_hour_ago]
-        self.calls[s].append(now)
-        return len(self.calls[s]) > self.max_calls_per_hour
-
-
-rate_limiter = RateLimiter(4)
-PASSWORD = "KdGx84Mc2yQCJEVr"
+usage_repository = DemoUserRepositoryFirebase.instance()
+rate_limiter = RateLimiter(
+    max_calls_per_hour=settings.DEMO_API_KEY_ALLOWED_USAGE,
+    usage_repository=usage_repository,
+)
 
 
 class MainMiddleware(BaseHTTPMiddleware):
@@ -45,15 +34,11 @@ class MainMiddleware(BaseHTTPMiddleware):
         request_id = util.get_state(request, RequestStateKey.REQUEST_ID)
         ip_address = util.get_state(request, RequestStateKey.IP_ADDRESS)
         country = util.get_state(request, RequestStateKey.COUNTRY)
-        password = request.headers.get("password")
 
+        api_key = request.headers.get("authorization")
         formatted_ip = ip_address or request.client.host or "default"
         logger.info(f"REQUEST RATE LIMITTING INFO: " f" {str(rate_limiter.calls)}")
-        if (
-            (not password or password != PASSWORD)
-            and "v0/conversation" in request.url.path
-            and request.method == "POST"
-        ):
+        if api_key == settings.DEMO_API_KEY:
             if rate_limiter.is_rate_limited(formatted_ip):
                 """logger.error(
                     f"Error while handling request. request_id={request_id} "
