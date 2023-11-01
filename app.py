@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import PlainTextResponse
 
 import settings
+from router.repository.token_usage_repository import TokenUsageRepositoryFirestore
 from router.routers import main_router
 from router.routers import routing_utils
 from router.service.exception_handlers.exception_handlers import (
@@ -116,3 +118,31 @@ def root():
 
 
 app.add_route("/metrics", metrics)
+
+
+@app.get("/metrics-app", response_class=PlainTextResponse)
+def metrics_app():
+    model_name = "mistralai/Mistral-7B-Instruct-v0.1"
+
+    repo = TokenUsageRepositoryFirestore.instance()
+    usage = repo.get_usage_by_model(model_name)
+    result = ""
+    result += (
+        '\nllm_proxy_llm_total_tokens_sum{model_name="'
+        + model_name
+        + '"} '
+        + str(usage["completion_tokens"])
+    )
+    result += (
+        '\nllm_proxy_llm_completion_tokens_sum{model_name="'
+        + model_name
+        + '"} '
+        + str(usage["prompt_tokens"])
+    )
+    result += (
+        '\nllm_proxy_llm_prompt_tokens_sum{model_name="'
+        + model_name
+        + '"} '
+        + str(usage["total_tokens"])
+    )
+    return result

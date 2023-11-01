@@ -23,6 +23,7 @@ user_repository = UserRepositoryFirebase.instance()
 api_key_validator = ApiKeyValidator(user_repository)
 token_usage_repository = TokenUsageRepositoryFirestore.instance()
 
+
 @router.post(
     "/v1/chat/completions",
 )
@@ -33,7 +34,7 @@ async def endpoint(
     token_tracker = TokenTracker(
         method="POST",
         path_template="/v1/chat/completions",
-        repository=token_usage_repository
+        repository=token_usage_repository,
     )
     if not request.stream:
         return await completion_service.execute(request, token_tracker)
