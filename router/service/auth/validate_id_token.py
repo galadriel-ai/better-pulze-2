@@ -70,7 +70,7 @@ class ApiKeyValidator:
         if not api_key_header.startswith("lo-"):
             raise error_responses.InvalidCredentialsAPIError(
                 message_extra="API Key needs to start with 'lo-'. Please make sure "
-                              "you using llmos.dev API Key."
+                "you using llmos.dev API Key."
             )
 
         result = self.user_repository.validate_api_key(api_key_header)

@@ -14,27 +14,42 @@ from router.service.monitoring.utils import get_path_template
 REQUESTS = Counter(
     "llm_proxy_requests_total",
     "Total count of requests by method and path.",
-    ["method", "path_template", "chain"],
+    ["method", "path_template"],
 )
 RESPONSES = Counter(
     "llm_proxy_responses_total",
     "Total count of responses by method, path and status codes.",
-    ["method", "path_template", "status_code", "chain"],
+    ["method", "path_template", "status_code"],
 )
 REQUESTS_PROCESSING_TIME = Histogram(
     "llm_proxy_requests_processing_time_seconds",
     "Histogram of requests processing time by path (in seconds)",
-    ["method", "path_template", "chain"],
+    ["method", "path_template"],
 )
 REQUESTS_PROCESSING_TIME_ERRORS = Summary(
     "llm_proxy_error_requests_processing_time_seconds",
     "Histogram of requests processing time by path (in seconds)",
-    ["method", "path_template", "exception_type", "chain"],
+    ["method", "path_template", "exception_type"],
 )
 EXCEPTIONS = Counter(
     "llm_proxy_exceptions_total",
     "Total count of exceptions raised by path and exception type",
-    ["method", "path_template", "exception_type", "is_unexpected", "chain"],
+    ["method", "path_template", "exception_type", "is_unexpected"],
+)
+LLM_COMPLETION_TOKENS_GENERATED = Summary(
+    "llm_proxy_llm_completion_tokens",
+    "Histogram of llm completion tokens",
+    ["method", "path_template", "model_name"],
+)
+LLM_PROMPT_TOKENS_GENERATED = Summary(
+    "llm_proxy_llm_prompt_tokens",
+    "Histogram of llm prompt tokens",
+    ["method", "path_template", "model_name"],
+)
+LLM_TOTAL_TOKENS_GENERATED = Summary(
+    "llm_proxy_llm_total_tokens",
+    "Histogram of llm total tokens",
+    ["method", "path_template", "model_name"],
 )
 
 logger = api_logger.get()
@@ -53,8 +68,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         path_template, is_handled_path = get_path_template(request)
         if self._is_path_filtered(is_handled_path):
             return await call_next(request)
-        chain = request.query_params.get("chain")
-        REQUESTS.labels(method=method, chain=chain, path_template=path_template).inc()
+        REQUESTS.labels(method=method, path_template=path_template).inc()
         before_time = time.perf_counter()
         time_elapsed = time.time() - start
         if time_elapsed > 1:
@@ -68,14 +82,12 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
                 method=method,
                 path_template=path_template,
                 is_unexpected=is_unexpected,
-                chain=chain,
                 exception_type=type(e).__name__,
             ).inc()
             after_time = time.perf_counter()
             REQUESTS_PROCESSING_TIME_ERRORS.labels(
                 method=method,
                 exception_type=type(e).__name__,
-                chain=chain,
                 path_template=path_template,
             ).observe(after_time - before_time)
             raise e
@@ -84,13 +96,12 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
             status_code = response.status_code
             after_time = time.perf_counter()
             REQUESTS_PROCESSING_TIME.labels(
-                method=method, chain=chain, path_template=path_template
+                method=method, path_template=path_template
             ).observe(after_time - before_time)
         finally:
             RESPONSES.labels(
                 method=method,
                 path_template=path_template,
-                chain=chain,
                 status_code=status_code,
             ).inc()
             time_elapsed = time.time() - start

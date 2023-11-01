@@ -23,7 +23,7 @@ user_repository = UserRepositoryFirebase.instance()
 session_token_validator: SessionTokenValidator = StytchTokenValidator(
     project_id=os.getenv("STYTCH_PROJECT_ID"),
     secret=os.getenv("STYTCH_SECRET"),
-    environment=os.getenv("STYTCH_ENVIRONMENT")
+    environment=os.getenv("STYTCH_ENVIRONMENT"),
 )
 
 

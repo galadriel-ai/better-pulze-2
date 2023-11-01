@@ -1,20 +1,21 @@
 import json
 import os
-from typing import Dict, AsyncIterable
+from typing import AsyncIterable
 
 import aiohttp
 from langsmith import traceable
 
-from router.domain.pricing.entities import UsageDebug
+from router.domain.tokens.token_tracker import TokenTracker
 from router.service.completion.entities import ChatCompletionRequest
-from router.service.completion.intent_router import detect_intent, Intent
 
 
-async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIterable:
+async def execute(
+    request: ChatCompletionRequest, token_tracker: TokenTracker, authorization=None
+) -> AsyncIterable:
     # Clean up etc
     request.model = "mistralai/Mistral-7B-Instruct-v0.1"
     request_input = request.model_dump()
-    
+
     for m in request_input["messages"]:
         if not m.get("function_call"):
             m.pop("name", None)
@@ -41,9 +42,13 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIt
             try:
                 decoded = line.decode()
                 if decoded[1] != "\n":
-                    all_lines.append(json.loads(decoded.split("data: ")[-1]))
+                    decoded_line = json.loads(decoded.split("data: ")[-1])
+                    all_lines.append(decoded_line)
+                    if "usage" in decoded_line:
+                        token_tracker.track(decoded_line)
             except:
                 pass
+
             yield line
 
     @traceable(run_type="llm", name="stream_openai.ChatCompletion.create")
