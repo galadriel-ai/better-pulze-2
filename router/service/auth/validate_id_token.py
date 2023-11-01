@@ -7,6 +7,7 @@ from fastapi.security import APIKeyHeader
 from stytch import Client
 from stytch.consumer.models.sessions import AuthenticateResponse
 
+import settings
 from router import api_logger
 from router.repository.user_repository import UserRepositoryFirebase
 from router.repository.user_repository import ValidatedUser
@@ -56,10 +57,15 @@ class ApiKeyValidator:
         self.user_repository = user_repository
 
     async def validate(
-        self, api_key_header: str = Security(API_KEY_HEADER)
+        self,
+        api_key_header: str = Security(API_KEY_HEADER),
+        user_ip_address: str = None,
     ) -> Optional[ValidatedUser]:
         if not api_key_header:
             raise error_responses.AuthorizationMissingAPIError()
+
+        if api_key_header == settings.DEMO_API_KEY:
+            return ValidatedUser(uid="demo-user", email="demo@user.com")
 
         if not api_key_header.startswith("Bearer "):
             raise error_responses.InvalidCredentialsAPIError(

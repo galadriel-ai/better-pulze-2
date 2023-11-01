@@ -45,7 +45,8 @@ async def execute(
                     decoded_line = json.loads(decoded.split("data: ")[-1])
                     all_lines.append(decoded_line)
                     if "usage" in decoded_line:
-                        token_tracker.track(decoded_line)
+                        if decoded_line["usage"]:
+                            token_tracker.track(decoded_line)
             except:
                 pass
 
