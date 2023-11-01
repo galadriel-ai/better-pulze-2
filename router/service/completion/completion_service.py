@@ -30,6 +30,7 @@ async def execute(
             formatted_dict[key] = value
 
     status, response_dict = await _get_oai_response(authorization, formatted_dict)
+    token_tracker.track(response_dict)
     return JSONResponse(content=response_dict, status_code=status)
 
 
