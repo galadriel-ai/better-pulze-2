@@ -128,19 +128,19 @@ def metrics_app():
     usage = repo.get_usage_by_model(model_name)
     result = ""
     result += (
-        '\nllm_proxy_llm_total_tokens_sum{model_name="'
+        '\nllm_proxy_llm_total_tokens_grand_sum{model_name="'
         + model_name
         + '"} '
         + str(usage["completion_tokens"])
     )
     result += (
-        '\nllm_proxy_llm_completion_tokens_sum{model_name="'
+        '\nllm_proxy_llm_completion_tokens_grand_sum{model_name="'
         + model_name
         + '"} '
         + str(usage["prompt_tokens"])
     )
     result += (
-        '\nllm_proxy_llm_prompt_tokens_sum{model_name="'
+        '\nllm_proxy_llm_prompt_tokens_grand_sum{model_name="'
         + model_name
         + '"} '
         + str(usage["total_tokens"])
