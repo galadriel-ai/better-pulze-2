@@ -12,7 +12,7 @@ from router.service.completion.intent_router import detect_intent, Intent
 
 async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIterable:
     # Clean up etc
-    request.model = "mistral-7b-instruct"
+    request.model = "mistralai/Mistral-7B-Instruct-v0.1"
     request_input = request.model_dump()
     
     for m in request_input["messages"]:
@@ -29,11 +29,11 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIt
     all_lines = []
     async with aiohttp.ClientSession() as session:
         res = await session.post(
-            "https://api.perplexity.ai/chat/completions",
+            "https://api.endpoints.anyscale.com/v1/chat/completions",
             headers={
                 "Authorization": authorization
                 if authorization
-                else f'Bearer {os.getenv("PERPLEXITY_API_KEY")}'
+                else f'Bearer {os.getenv("ANYSCALE_LLM_API_KEY")}'
             },
             json=formatted_dict,
         )
@@ -58,20 +58,3 @@ async def execute(request: ChatCompletionRequest, authorization=None) -> AsyncIt
             return "", ""
 
     trace(request)
-
-
-async def _get_oai_streaming_response(authorization, formatted_dict):
-    async with aiohttp.ClientSession() as session:
-        return session.post(
-            "https://api.perplexity.ai/chat/completions",
-            headers={
-                "Authorization": authorization
-                if authorization
-                else f'Bearer {os.getenv("PERPLEXITY_API_KEY")}'
-            },
-            json=formatted_dict,
-        )
-
-
-def _get_usage_response(usage: UsageDebug, usage_type: str) -> Dict:
-    return {"type": usage_type, **usage.__dict__}
