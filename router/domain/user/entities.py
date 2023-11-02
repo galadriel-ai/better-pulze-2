@@ -6,6 +6,7 @@ from typing import Optional
 @dataclass(frozen=True)
 class User:
     uid: str
+    name: str
     email: str
     api_key: str
 
@@ -17,6 +18,7 @@ class User:
 
     def to_dict(self):
         return {
+            "name": self.name,
             "email": self.email,
             "api_key": self.api_key,
             "user_role": self.user_role,
@@ -30,6 +32,7 @@ class User:
     def from_dict(cls, uid, user_dict: Dict):
         return User(
             uid=uid,
+            name=user_dict.get("name"),
             email=user_dict.get("email"),
             api_key=user_dict.get("api_key"),
             user_role=user_dict.get("user_role"),

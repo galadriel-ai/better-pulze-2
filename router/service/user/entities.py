@@ -37,6 +37,7 @@ class GetUserResponse(BaseModel):
 
 
 class CreateUserRequest(BaseModel):
+    name: str = Field(description="Name")
     user_role: str = Field(description="User role")
     building: str = Field(description="What is the user building?")
     has_paying_customers: bool = Field(description="Do you have paying customers?")
