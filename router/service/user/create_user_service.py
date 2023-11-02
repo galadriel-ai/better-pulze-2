@@ -17,6 +17,7 @@ def execute(
             uid=validated_user.uid,
             email=validated_user.email,
             api_key=_create_api_key(),
+            name=payload.name,
             user_role=payload.user_role,
             building=payload.building,
             has_paying_customers=payload.has_paying_customers,
