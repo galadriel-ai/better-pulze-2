@@ -38,7 +38,7 @@ def _track_register(
         user_id: str, email: str, **kwargs
 ):
     segment_analytics.track(
-        user_id=user_id or email,
+        user_id=user_id,
         event="Sign up",
     )
 
@@ -47,6 +47,6 @@ def _track_api_call(
         user_id: str, email: str, **kwargs
 ):
     segment_analytics.track(
-        user_id=user_id or email,
+        user_id=user_id,
         event="API call",
     )
