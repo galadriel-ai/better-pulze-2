@@ -18,6 +18,8 @@ PROMETHEUS_MULTIPROC_DIR = os.getenv("PROMETHEUS_MULTIPROC_DIR", None)
 DEMO_API_KEY = "Bearer demo-api-key"
 DEMO_API_KEY_ALLOWED_USAGE = 4
 
+SEGMENT_WRITE_KEY = os.getenv("SEGMENT_WRITE_KEY", None)
+
 
 def is_production():
     return ENVIRONMENT == "production"
