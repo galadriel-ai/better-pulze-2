@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 from firebase_admin import auth
@@ -46,7 +47,7 @@ class UserRepositoryFirebase:
 
     def create_user(self, user: User):
         doc_ref = self.db.collection(DB_USERS_KEY).document(user.uid)
-        doc_ref.set(user.to_dict())
+        doc_ref.set({**user.to_dict(), "created_at": int(datetime.utcnow().timestamp())})
 
     def get_user_by_api_key(self, api_key: str) -> Optional[User]:
         docs = (

@@ -2,7 +2,8 @@ from fastapi import APIRouter
 from fastapi import Depends
 from starlette.responses import StreamingResponse
 
-from router import api_logger
+from router import api_logger, analytics
+from router.analytics import TrackingEventType
 from router.domain.tokens.token_tracker import TokenTracker
 from router.repository.token_usage_repository import TokenUsageRepositoryFirestore
 from router.repository.user_repository import UserRepositoryFirebase
@@ -36,6 +37,7 @@ async def endpoint(
         path_template="/v1/chat/completions",
         repository=token_usage_repository,
     )
+    analytics.track(TrackingEventType.API_REQUEST, validated_user.uid, validated_user.email)
     if not request.stream:
         return await completion_service.execute(request, token_tracker)
     else:
