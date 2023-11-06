@@ -5,14 +5,19 @@ import aiohttp
 from langsmith import traceable
 from starlette.responses import JSONResponse
 
+from router import analytics
+from router.analytics import TrackingEventType
 from router.domain.pricing.entities import UsageDebug
 from router.domain.tokens.token_tracker import TokenTracker
+from router.repository.user_repository import ValidatedUser
 from router.service.completion.entities import ChatCompletionRequest
 
 
 @traceable(run_type="chain", name="CompletionService")
 async def execute(
-    request: ChatCompletionRequest, token_tracker: TokenTracker, authorization=None
+        request: ChatCompletionRequest,
+        token_tracker: TokenTracker,
+        validated_user: ValidatedUser,
 ) -> JSONResponse:
     # Clean up etc
     request.model = "mistralai/Mistral-7B-Instruct-v0.1"
@@ -29,20 +34,24 @@ async def execute(
         if value:
             formatted_dict[key] = value
 
-    status, response_dict = await _get_oai_response(authorization, formatted_dict)
+    status, response_dict = await _get_oai_response(formatted_dict)
     token_tracker.track(response_dict)
+    analytics.track(
+        TrackingEventType.API_REQUEST,
+        validated_user.uid,
+        validated_user.email,
+        tokens=response_dict.get("usage"),
+    )
     return JSONResponse(content=response_dict, status_code=status)
 
 
 @traceable(run_type="llm", name="openai.ChatCompletion.create")
-async def _get_oai_response(authorization, formatted_dict):
+async def _get_oai_response(formatted_dict):
     async with aiohttp.ClientSession() as session:
         res = await session.post(
             "https://api.endpoints.anyscale.com/v1/chat/completions",
             headers={
-                "Authorization": authorization
-                if authorization
-                else f'Bearer {os.getenv("ANYSCALE_LLM_API_KEY")}'
+                "Authorization": f'Bearer {os.getenv("ANYSCALE_LLM_API_KEY")}'
             },
             json=formatted_dict,
         )

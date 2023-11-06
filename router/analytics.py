@@ -40,13 +40,22 @@ def _track_register(
     segment_analytics.track(
         user_id=user_id,
         event="Sign up",
+        properties={
+            "email": email
+        },
     )
 
 
 def _track_api_call(
         user_id: str, email: str, **kwargs
 ):
+    properties = {
+        "email": email
+    }
+    if tokens := kwargs.get("tokens"):
+        properties = {**properties, **tokens}
     segment_analytics.track(
         user_id=user_id,
         event="API call",
+        properties=properties,
     )

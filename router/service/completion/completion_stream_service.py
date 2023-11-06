@@ -5,12 +5,17 @@ from typing import AsyncIterable
 import aiohttp
 from langsmith import traceable
 
+from router import analytics
+from router.analytics import TrackingEventType
 from router.domain.tokens.token_tracker import TokenTracker
+from router.repository.user_repository import ValidatedUser
 from router.service.completion.entities import ChatCompletionRequest
 
 
 async def execute(
-    request: ChatCompletionRequest, token_tracker: TokenTracker, authorization=None
+        request: ChatCompletionRequest,
+        token_tracker: TokenTracker,
+        validated_user: ValidatedUser,
 ) -> AsyncIterable:
     # Clean up etc
     request.model = "mistralai/Mistral-7B-Instruct-v0.1"
@@ -32,9 +37,7 @@ async def execute(
         res = await session.post(
             "https://api.endpoints.anyscale.com/v1/chat/completions",
             headers={
-                "Authorization": authorization
-                if authorization
-                else f'Bearer {os.getenv("ANYSCALE_LLM_API_KEY")}'
+                "Authorization": f'Bearer {os.getenv("ANYSCALE_LLM_API_KEY")}'
             },
             json=formatted_dict,
         )
@@ -44,9 +47,15 @@ async def execute(
                 if decoded[1] != "\n":
                     decoded_line = json.loads(decoded.split("data: ")[-1])
                     all_lines.append(decoded_line)
-                    if "usage" in decoded_line:
-                        if decoded_line["usage"]:
-                            token_tracker.track(decoded_line)
+                    if decoded_line.get("usage"):
+                        token_tracker.track(decoded_line)
+                        analytics.track(
+                            TrackingEventType.API_REQUEST,
+                            validated_user.uid,
+                            validated_user.email,
+                            tokens=decoded_line.get("usage"),
+                        )
+
             except:
                 pass
 

@@ -2,8 +2,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from starlette.responses import StreamingResponse
 
-from router import api_logger, analytics
-from router.analytics import TrackingEventType
+from router import api_logger
 from router.domain.tokens.token_tracker import TokenTracker
 from router.repository.token_usage_repository import TokenUsageRepositoryFirestore
 from router.repository.user_repository import UserRepositoryFirebase
@@ -29,24 +28,23 @@ token_usage_repository = TokenUsageRepositoryFirestore.instance()
     "/v1/chat/completions",
 )
 async def endpoint(
-    request: ChatCompletionRequest,
-    validated_user: ValidatedUser = Depends(api_key_validator.validate),
+        request: ChatCompletionRequest,
+        validated_user: ValidatedUser = Depends(api_key_validator.validate),
 ):
     token_tracker = TokenTracker(
         method="POST",
         path_template="/v1/chat/completions",
         repository=token_usage_repository,
     )
-    analytics.track(TrackingEventType.API_REQUEST, validated_user.uid, validated_user.email)
     if not request.stream:
-        return await completion_service.execute(request, token_tracker)
+        return await completion_service.execute(request, token_tracker, validated_user)
     else:
         headers = {
             "X-Content-Type-Options": "nosniff",
             "Connection": "keep-alive",
         }
         return StreamingResponse(
-            completion_stream_service.execute(request, token_tracker),
+            completion_stream_service.execute(request, token_tracker, validated_user),
             headers=headers,
             media_type="text/event-stream",
         )
