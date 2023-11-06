@@ -6,10 +6,13 @@ To run this file to make one request: `python load_test.py`
 To run an actual load test: `locust -f load_test.py --modern-ui`, and use the Locust web interface to start the test.
 """
 
-from locust import HttpUser, task
+from locust import HttpUser, task, events
+from gevent.lock import Semaphore
+from time import time
+
 import os
 
-API_URL = "https://api.endpoints.anyscale.com/v1"
+API_URL = "http://10.132.0.43:8000/v1"
 API_KEY = os.getenv("ANYSCALE_LLM_API_KEY")
 MODEL = "mistralai/Mistral-7B-Instruct-v0.1"  # may be different name by provider
 
@@ -25,18 +28,27 @@ request_body = {
 }
 request_headers = {"Authorization": f"Bearer {API_KEY}"}
 
+stats = {"content-length": 0}
 
 class HelloWorldUser(HttpUser):
     host = API_URL
+    tokens_in = 0
+    tokens_out = 0
+    total_time = 0
+    _lock = Semaphore()  # A lock to ensure thread-safe operations on the sum
+
 
     @task
     def hello_world(self):
+        start_time = time()
         with self.client.post(
             "/chat/completions",
             headers=request_headers,
             json=request_body,
             catch_response=True,
         ) as res:
+            end_time = time()  # End time of the task
+            duration = end_time - start_time  # Calculate the duration of the task
             if res.status_code != 200:
                 res.failure(f"Received unexpected response code: {res.status_code}")
             else:
@@ -48,10 +60,31 @@ class HelloWorldUser(HttpUser):
                         res.failure(
                             f"Received fewer than desired number of tokens: {j['usage']['completion_tokens']}"
                         )
+                    tokens_usage = j["usage"]
+                    with HelloWorldUser._lock:
+                        HelloWorldUser.tokens_in += tokens_usage["prompt_tokens"]
+                        HelloWorldUser.tokens_out += tokens_usage["completion_tokens"]
+                        HelloWorldUser.total_time += duration
+
                 except Exception as err:
                     res.failure(
                         f"Received unexpected response: {res.text}, error {err}"
                     )
+
+@events.test_stop.add_listener
+def on_test_stop(environment, **kwargs):
+    avg_tokens_per_second = -1
+    with HelloWorldUser._lock:
+        total_tokens = HelloWorldUser.tokens_in + HelloWorldUser.tokens_out
+        if HelloWorldUser.total_time > 0:
+            avg_tokens_per_second = total_tokens / HelloWorldUser.total_time
+        else:
+            avg_tokens_per_second = 0
+    print(f"Total tokens in: {HelloWorldUser.tokens_in}")
+    print(f"Total tokens out: {HelloWorldUser.tokens_out}")
+    print(f"Total tokens: {HelloWorldUser.tokens_in + HelloWorldUser.tokens_out}")
+    print(f"Total time: {HelloWorldUser.total_time} seconds")
+    print(f"Average tokens per second: {avg_tokens_per_second}")
 
 
 if __name__ == "__main__":
