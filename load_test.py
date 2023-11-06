@@ -9,6 +9,7 @@ To run an actual load test: `locust -f load_test.py --modern-ui`, and use the Lo
 from locust import HttpUser, task, events
 from gevent.lock import Semaphore
 from time import time
+import random
 
 import os
 
@@ -19,6 +20,12 @@ MODEL = "mistralai/Mistral-7B-Instruct-v0.1"  # may be different name by provide
 print(f"API_KEY: {API_KEY}")
 
 MAX_TOKENS = 100
+
+messages = [
+    "Return 100 bible verses",
+    "Write a poem about birds and the bees",
+    "Can you cite the beginning of US Constitution?"
+]
 
 request_body = {
     "model": MODEL,
@@ -41,6 +48,7 @@ class HelloWorldUser(HttpUser):
 
     @task
     def hello_world(self):
+        request_body["messages"][0]["content"] = random.choice(messages)
         with self.client.post(
             "/chat/completions",
             headers=request_headers,
