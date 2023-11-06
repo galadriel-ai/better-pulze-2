@@ -32,6 +32,7 @@ stats = {"content-length": 0}
 
 class HelloWorldUser(HttpUser):
     host = API_URL
+    request_count = 0
     tokens_in = 0
     tokens_out = 0
     total_time = 0
@@ -40,15 +41,12 @@ class HelloWorldUser(HttpUser):
 
     @task
     def hello_world(self):
-        start_time = time()
         with self.client.post(
             "/chat/completions",
             headers=request_headers,
             json=request_body,
             catch_response=True,
         ) as res:
-            end_time = time()  # End time of the task
-            duration = end_time - start_time  # Calculate the duration of the task
             if res.status_code != 200:
                 res.failure(f"Received unexpected response code: {res.status_code}")
             else:
@@ -62,29 +60,33 @@ class HelloWorldUser(HttpUser):
                         )
                     tokens_usage = j["usage"]
                     with HelloWorldUser._lock:
+                        HelloWorldUser.request_count += 1
                         HelloWorldUser.tokens_in += tokens_usage["prompt_tokens"]
                         HelloWorldUser.tokens_out += tokens_usage["completion_tokens"]
-                        HelloWorldUser.total_time += duration
 
                 except Exception as err:
                     res.failure(
                         f"Received unexpected response: {res.text}, error {err}"
                     )
 
+# Record the start time of the test
+@events.test_start.add_listener
+def on_test_start(environment, **kwargs):
+    HelloWorldUser.test_start_time = time()
+
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
-    avg_tokens_per_second = -1
+    test_end_time = time()
+    test_duration = test_end_time - HelloWorldUser.test_start_time
     with HelloWorldUser._lock:
         total_tokens = HelloWorldUser.tokens_in + HelloWorldUser.tokens_out
-        if HelloWorldUser.total_time > 0:
-            avg_tokens_per_second = total_tokens / HelloWorldUser.total_time
-        else:
-            avg_tokens_per_second = 0
+        avg_tokens = total_tokens / test_duration if test_duration > 0 else 0       
     print(f"Total tokens in: {HelloWorldUser.tokens_in}")
     print(f"Total tokens out: {HelloWorldUser.tokens_out}")
     print(f"Total tokens: {HelloWorldUser.tokens_in + HelloWorldUser.tokens_out}")
-    print(f"Total time: {HelloWorldUser.total_time} seconds")
-    print(f"Average tokens per second: {avg_tokens_per_second}")
+    print(f"Total time: {test_duration} seconds")
+    print(f"Requests: {HelloWorldUser.request_count}")
+    print(f"Average tokens per second: {avg_tokens}")
 
 
 if __name__ == "__main__":
