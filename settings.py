@@ -20,6 +20,8 @@ DEMO_API_KEY_ALLOWED_USAGE = 4
 
 SEGMENT_WRITE_KEY = os.getenv("SEGMENT_WRITE_KEY", None)
 
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://34.36.255.140/v1/")
+
 
 def is_production():
     return ENVIRONMENT == "production"
