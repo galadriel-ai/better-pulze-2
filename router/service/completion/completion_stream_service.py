@@ -48,14 +48,13 @@ async def execute(
                     decoded_line = json.loads(decoded.split("data: ")[-1])
                     all_lines.append(decoded_line)
                     if decoded_line.get("usage"):
-                        token_tracker.track(decoded_line)
+                        token_tracker.track(validated_user.uid, decoded_line)
                         analytics.track(
                             TrackingEventType.API_REQUEST,
                             validated_user.uid,
                             validated_user.email,
                             tokens=decoded_line.get("usage"),
                         )
-
             except:
                 pass
 

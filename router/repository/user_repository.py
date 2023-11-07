@@ -66,6 +66,7 @@ def _example_usage():
         email="kristjan@thesentinel.ai",
         api_key="Mock",
         user_role="role",
+        name="name"
     )
     repository.create_user(user)
     result = repository.get_user(user.uid)

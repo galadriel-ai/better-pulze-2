@@ -35,7 +35,7 @@ async def execute(
             formatted_dict[key] = value
 
     status, response_dict = await _get_oai_response(formatted_dict)
-    token_tracker.track(response_dict)
+    token_tracker.track(validated_user.uid, response_dict)
     analytics.track(
         TrackingEventType.API_REQUEST,
         validated_user.uid,

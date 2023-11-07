@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime
+from datetime import timezone
 from typing import Dict
 from typing import Optional
 
@@ -15,6 +17,8 @@ class User:
     has_paying_customers: Optional[bool] = None
     project_stage: Optional[str] = None
     llm_monthly_cost: Optional[str] = None
+    # UTC timestamp of when user was created
+    created_at: Optional[int] = None
 
     def to_dict(self):
         return {
@@ -40,4 +44,6 @@ class User:
             has_paying_customers=user_dict.get("has_paying_customers"),
             project_stage=user_dict.get("project_stage"),
             llm_monthly_cost=user_dict.get("llm_monthly_cost"),
+            # Earlier users don't have "created_at" field populated
+            created_at=user_dict.get("created_at") or int(datetime(2023, 11, 1, tzinfo=timezone.utc).timestamp()),
         )
