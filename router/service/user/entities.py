@@ -1,6 +1,24 @@
+from typing import Optional, List, Dict
+
 from pydantic import BaseModel, Field
 
 from router.domain.user.entities import User
+
+
+class UsageStatistics(BaseModel):
+    model: Optional[str] = Field(description="Model name")
+    completion_tokens: int = Field(description="Completion tokens used")
+    prompt_tokens: int = Field(description="Prompt tokens used")
+    total_tokens: int = Field(description="Total tokens used")
+
+    @classmethod
+    def from_usage_dict(cls, usage: Dict):
+        return UsageStatistics(
+            model=usage.get("model"),
+            completion_tokens=usage.get("completion_tokens"),
+            prompt_tokens=usage.get("prompt_tokens"),
+            total_tokens=usage.get("total_tokens"),
+        )
 
 
 class GetUserResponse(BaseModel):
@@ -16,9 +34,12 @@ class GetUserResponse(BaseModel):
     llm_monthly_cost: str = Field(
         description="What is the project stage?", default=None
     )
+    token_usages: List[UsageStatistics] = Field(
+        description="User model token usages", default=[]
+    )
 
     @classmethod
-    def from_user(cls, user: User):
+    def from_user(cls, user: User, usages: List[UsageStatistics]):
         response = GetUserResponse(
             email=user.email,
             api_key=user.api_key,
@@ -33,6 +54,7 @@ class GetUserResponse(BaseModel):
             response.project_stage = user.project_stage
         if user.llm_monthly_cost:
             response.llm_monthly_cost = user.llm_monthly_cost
+        response.token_usages = usages
         return response
 
 

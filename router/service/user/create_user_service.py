@@ -26,7 +26,7 @@ def execute(
         )
     )
     user = user_repository.get_user(validated_user.uid)
-    return GetUserResponse.from_user(user)
+    return GetUserResponse.from_user(user, usages=[])
 
 
 def _create_api_key():

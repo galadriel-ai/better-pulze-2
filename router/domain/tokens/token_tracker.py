@@ -13,16 +13,16 @@ logger = api_logger.get()
 
 class TokenTracker:
     def __init__(
-        self,
-        method: str,  # GET || POST etc..
-        path_template: str,  # /v1/endpoint
-        repository: TokenUsageRepositoryFirestore,
+            self,
+            method: str,  # GET || POST etc..
+            path_template: str,  # /v1/endpoint
+            repository: TokenUsageRepositoryFirestore,
     ):
         self.method = method
         self.path_template = path_template
         self.repository = repository
 
-    def track(self, response_dict: Dict):
+    def track(self, user_id: str, response_dict: Dict):
         try:
             model_name = response_dict["model"]
             usage = response_dict["usage"]
@@ -45,7 +45,7 @@ class TokenTracker:
                 model_name=model_name,
             ).observe(usage["total_tokens"])
 
-            self.repository.track(model_name, usage)
+            self.repository.track(user_id, model_name, usage)
         except Exception as exc:
             # Log exception
             logger.info(f"Token tracker exception: {exc}")

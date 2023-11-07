@@ -4,7 +4,7 @@ from router.service.user.entities import GetUserResponse
 
 def test_get_user_response_from_user_minimal():
     result = GetUserResponse.from_user(
-        User(uid="uid", email="email", api_key="api_key")
+        User(uid="uid", email="email", api_key="api_key", name="name"), []
     )
     assert result == GetUserResponse(
         email="email",
@@ -23,7 +23,9 @@ def test_get_user_response_from_user_full():
             has_paying_customers=False,
             project_stage="project_stage",
             llm_monthly_cost="llm_cost",
-        )
+            name="name"
+        ),
+        usages=[]
     )
     assert result == GetUserResponse(
         email="email",
