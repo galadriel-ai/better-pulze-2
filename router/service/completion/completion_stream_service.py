@@ -10,12 +10,13 @@ from router.analytics import TrackingEventType
 from router.domain.tokens.token_tracker import TokenTracker
 from router.repository.user_repository import ValidatedUser
 from router.service.completion.entities import ChatCompletionRequest
+from router.service.completion.utils import get_chat_completion_endpoint
 
 
 async def execute(
-        request: ChatCompletionRequest,
-        token_tracker: TokenTracker,
-        validated_user: ValidatedUser,
+    request: ChatCompletionRequest,
+    token_tracker: TokenTracker,
+    validated_user: ValidatedUser,
 ) -> AsyncIterable:
     # Clean up etc
     request.model = "mistralai/Mistral-7B-Instruct-v0.1"
@@ -33,32 +34,43 @@ async def execute(
             formatted_dict[key] = value
 
     all_lines = []
+    endpoint = get_chat_completion_endpoint()
     async with aiohttp.ClientSession() as session:
         res = await session.post(
-            "https://api.endpoints.anyscale.com/v1/chat/completions",
-            headers={
-                "Authorization": f'Bearer {os.getenv("ANYSCALE_LLM_API_KEY")}'
-            },
+            endpoint.url,
+            headers=endpoint.headers,
             json=formatted_dict,
         )
+        completion_tokens = 0
+        usage = None
         async for line in res.content:
             try:
                 decoded = line.decode()
                 if decoded[1] != "\n":
                     decoded_line = json.loads(decoded.split("data: ")[-1])
+                    if await _has_token(decoded_line):
+                        completion_tokens += 1
                     all_lines.append(decoded_line)
                     if decoded_line.get("usage"):
-                        token_tracker.track(validated_user.uid, decoded_line)
-                        analytics.track(
-                            TrackingEventType.API_REQUEST,
-                            validated_user.uid,
-                            validated_user.email,
-                            tokens=decoded_line.get("usage"),
-                        )
+                        usage = decoded_line["usage"]
             except:
                 pass
 
             yield line
+        if usage is None:
+            usage = {
+                "prompt_tokens": 0,
+                "completion_tokens": completion_tokens,
+                "total_tokens": completion_tokens,
+            }
+        # token_tracker.track(validated_user.uid, decoded_line)
+        token_tracker.track({"model": request.model, "usage": usage})
+        analytics.track(
+            TrackingEventType.API_REQUEST,
+            validated_user.uid,
+            validated_user.email,
+            tokens=usage,
+        )
 
     @traceable(run_type="llm", name="stream_openai.ChatCompletion.create")
     def trace(r):
@@ -72,3 +84,7 @@ async def execute(
             return "", ""
 
     trace(request)
+
+
+async def _has_token(chunk: dict) -> bool:
+    return chunk["choices"][0]["delta"].get("content") is not None
