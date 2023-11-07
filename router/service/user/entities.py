@@ -20,6 +20,7 @@ class UsageStatistics(BaseModel):
             total_tokens=usage.get("total_tokens"),
         )
 
+
 class GetUserResponse(BaseModel):
     email: str = Field(description="User email")
     api_key: str = Field(description="User api_key")

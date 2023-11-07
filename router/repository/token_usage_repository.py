@@ -48,22 +48,18 @@ class TokenUsageRepositoryFirestore:
             "total_tokens": total_tokens,
         }
 
-    def get_usage_by_user(self, user_id: str, model_name: Optional[str], start_time: int = None) -> Dict:
+    def get_usage_by_user(self, user_id: str, model_name: Optional[str]) -> Dict:
         if model_name:
             docs = (
                 self.db.collection(DB_KEY_TOKEN_USAGES)
                 .where(filter=FieldFilter("model_name", "==", model_name))
                 .where(filter=FieldFilter("user_id", "==", user_id))
-                # Requires setting up an index
-                # .where(filter=FieldFilter("created_at", ">=", start_time))
                 .stream()
             )
         else:
             docs = (
                 self.db.collection(DB_KEY_TOKEN_USAGES)
                 .where(filter=FieldFilter("user_id", "==", user_id))
-                # Requires setting up an index
-                # .where(filter=FieldFilter("created_at", ">=", start_time))
                 .stream()
             )
 
