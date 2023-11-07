@@ -10,12 +10,13 @@ from router.analytics import TrackingEventType
 from router.domain.tokens.token_tracker import TokenTracker
 from router.repository.user_repository import ValidatedUser
 from router.service.completion.entities import ChatCompletionRequest
+from router.service.completion.utils import get_chat_completion_endpoint
 
 
 async def execute(
-        request: ChatCompletionRequest,
-        token_tracker: TokenTracker,
-        validated_user: ValidatedUser,
+    request: ChatCompletionRequest,
+    token_tracker: TokenTracker,
+    validated_user: ValidatedUser,
 ) -> AsyncIterable:
     # Clean up etc
     request.model = "mistralai/Mistral-7B-Instruct-v0.1"
@@ -33,12 +34,11 @@ async def execute(
             formatted_dict[key] = value
 
     all_lines = []
+    endpoint = get_chat_completion_endpoint()
     async with aiohttp.ClientSession() as session:
         res = await session.post(
-            "https://api.endpoints.anyscale.com/v1/chat/completions",
-            headers={
-                "Authorization": f'Bearer {os.getenv("ANYSCALE_LLM_API_KEY")}'
-            },
+            endpoint.url,
+            headers=endpoint.headers,
             json=formatted_dict,
         )
         async for line in res.content:
