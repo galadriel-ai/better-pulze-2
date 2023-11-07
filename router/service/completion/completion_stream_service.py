@@ -63,8 +63,7 @@ async def execute(
                 "completion_tokens": completion_tokens,
                 "total_tokens": completion_tokens,
             }
-        # token_tracker.track(validated_user.uid, decoded_line)
-        token_tracker.track({"model": request.model, "usage": usage})
+        token_tracker.track(validated_user.uid, {"model": request.model, "usage": usage})
         analytics.track(
             TrackingEventType.API_REQUEST,
             validated_user.uid,
