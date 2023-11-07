@@ -34,7 +34,7 @@ class GetUserResponse(BaseModel):
     llm_monthly_cost: str = Field(
         description="What is the project stage?", default=None
     )
-    token_usage: List[UsageStatistics] = Field(
+    token_usages: List[UsageStatistics] = Field(
         description="User model token usages", default=[]
     )
 
@@ -54,7 +54,7 @@ class GetUserResponse(BaseModel):
             response.project_stage = user.project_stage
         if user.llm_monthly_cost:
             response.llm_monthly_cost = user.llm_monthly_cost
-        response.token_usage = usages
+        response.token_usages = usages
         return response
 
 
