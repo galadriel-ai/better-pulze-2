@@ -5,6 +5,8 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
 import settings
+from router import api_logger
+from router.repository.google_compute_repository import GoogleComputeRepository
 from router.repository.token_usage_repository import TokenUsageRepositoryFirestore
 from router.routers import main_router
 from router.routers import routing_utils
@@ -17,6 +19,8 @@ from router.service.middleware.request_enrichment_middleware import (
 )
 from router.service.monitoring.prometheus_metrics_endpoint import metrics
 from router.service.monitoring.prometheus_middleware import PrometheusMiddleware
+
+logger = api_logger.get()
 
 app = FastAPI()
 
@@ -145,4 +149,13 @@ def metrics_app():
         + '"} '
         + str(usage["prompt_tokens"])
     )
+    try:
+        compute_status = GoogleComputeRepository.instance().get_instance_group_status()
+        result += "\nllm_proxy_llm_autoscaler_target_size " + str(
+            compute_status.target_size
+        )
+        for name, value in compute_status.actions.items():
+            result += f"\nllm_proxy_llm_autoscaler_action_{name} " + str(value)
+    except:
+        logger.error("Failed to fetch autoscaler stats", exc_info=True)
     return result

@@ -14,3 +14,4 @@ firebase-admin
 stytch
 pytz
 segment-analytics-python>=2.2.3
+google-cloud-compute

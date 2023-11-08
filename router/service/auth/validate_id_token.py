@@ -59,7 +59,6 @@ class ApiKeyValidator:
     async def validate(
         self,
         api_key_header: str = Security(API_KEY_HEADER),
-        user_ip_address: str = None,
     ) -> Optional[ValidatedUser]:
         if not api_key_header:
             raise error_responses.AuthorizationMissingAPIError()
