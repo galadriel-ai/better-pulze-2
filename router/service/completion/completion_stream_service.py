@@ -60,10 +60,11 @@ async def execute(
 
             yield line
         if usage is None:
+            prompt_tokens = await _estimate_prompt_len(request.messages)
             usage = {
-                "prompt_tokens": await _estimate_prompt_len(request.messages),
+                "prompt_tokens": prompt_tokens,
                 "completion_tokens": completion_tokens,
-                "total_tokens": completion_tokens,
+                "total_tokens": completion_tokens + prompt_tokens,
             }
         token_tracker.track(
             validated_user.uid, endpoint.name, {"model": request.model, "usage": usage}
@@ -92,7 +93,8 @@ async def execute(
 async def _estimate_prompt_len(messages: List[Message]) -> int:
     token_count = 0
     for message in messages:
-        token_count += len(message.content or "") // 3
+        if isinstance(message, BaseMessage):
+            token_count += len(message.content or "") // 3
     return token_count
 
 
