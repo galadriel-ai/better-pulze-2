@@ -23,5 +23,9 @@ SEGMENT_WRITE_KEY = os.getenv("SEGMENT_WRITE_KEY", None)
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://34.36.255.140/v1/")
 PROVIDER_RATIO = float(os.getenv("PROVIDER_RATIO", "0.5"))
 
+GCP_PROJECT_ID = "sidekik-ai"
+GCP_ZONE = "us-west1-b"
+GCP_INSTANCE_GROUP_NAME = "llm-gpu-instance-group"
+
 def is_production():
     return ENVIRONMENT == "production"
