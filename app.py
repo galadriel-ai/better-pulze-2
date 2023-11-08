@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
 import settings
+from router.repository.google_compute_repository import GoogleComputeRepository
 from router.repository.token_usage_repository import TokenUsageRepositoryFirestore
 from router.routers import main_router
 from router.routers import routing_utils
@@ -145,4 +146,10 @@ def metrics_app():
         + '"} '
         + str(usage["prompt_tokens"])
     )
+    compute_status = GoogleComputeRepository.instance().get_instance_group_status()
+    result += "\nllm_proxy_llm_autoscaler_target_size " + str(
+        compute_status.target_size
+    )
+    for name, value in compute_status.actions.items():
+        result += f"\nllm_proxy_llm_autoscaler_action_{name} " + str(value)
     return result
