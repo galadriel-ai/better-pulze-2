@@ -1,5 +1,5 @@
 import json
-import os
+from typing import List
 from typing import AsyncIterable
 
 import aiohttp
@@ -9,6 +9,8 @@ from router import analytics
 from router.analytics import TrackingEventType
 from router.domain.tokens.token_tracker import TokenTracker
 from router.repository.user_repository import ValidatedUser
+from router.service.completion.entities import Message
+from router.service.completion.entities import BaseMessage
 from router.service.completion.entities import ChatCompletionRequest
 from router.service.completion.utils import get_chat_completion_endpoint
 
@@ -58,12 +60,15 @@ async def execute(
 
             yield line
         if usage is None:
+            prompt_tokens = await _estimate_prompt_len(request.messages)
             usage = {
-                "prompt_tokens": 0,
+                "prompt_tokens": prompt_tokens,
                 "completion_tokens": completion_tokens,
-                "total_tokens": completion_tokens,
+                "total_tokens": completion_tokens + prompt_tokens,
             }
-        token_tracker.track(validated_user.uid, {"model": request.model, "usage": usage})
+        token_tracker.track(
+            validated_user.uid, endpoint.name, {"model": request.model, "usage": usage}
+        )
         analytics.track(
             TrackingEventType.API_REQUEST,
             validated_user.uid,
@@ -83,6 +88,14 @@ async def execute(
             return "", ""
 
     trace(request)
+
+
+async def _estimate_prompt_len(messages: List[Message]) -> int:
+    token_count = 0
+    for message in messages:
+        if isinstance(message, BaseMessage):
+            token_count += len(message.content or "") // 3
+    return token_count
 
 
 async def _has_token(chunk: dict) -> bool:
