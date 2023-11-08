@@ -1,7 +1,7 @@
-import os
 from typing import Dict
 
 import aiohttp
+from router import api_logger
 from langsmith import traceable
 from starlette.responses import JSONResponse
 
@@ -12,6 +12,8 @@ from router.domain.tokens.token_tracker import TokenTracker
 from router.repository.user_repository import ValidatedUser
 from router.service.completion.entities import ChatCompletionRequest
 from router.service.completion.utils import get_chat_completion_endpoint
+
+logger = api_logger.get()
 
 
 @traceable(run_type="chain", name="CompletionService")
@@ -35,8 +37,8 @@ async def execute(
         if value:
             formatted_dict[key] = value
 
-    status, response_dict = await _get_oai_response(formatted_dict)
-    token_tracker.track(validated_user.uid, response_dict)
+    status, response_dict, provider = await _get_oai_response(formatted_dict)
+    token_tracker.track(validated_user.uid, provider, response_dict)
     analytics.track(
         TrackingEventType.API_REQUEST,
         validated_user.uid,
@@ -55,7 +57,7 @@ async def _get_oai_response(formatted_dict):
             headers=endpoint.headers,
             json=formatted_dict,
         )
-        return res.status, await res.json()
+        return res.status, await res.json(), endpoint.name
 
 
 def _get_usage_response(usage: UsageDebug, usage_type: str) -> Dict:

@@ -15,14 +15,15 @@ class TokenUsageRepositoryFirestore:
     def __init__(self):
         self.db = FirestoreInitializer.instance().get_db()
 
-    def track(self, user_id: str, model_name: str, usage_dict: Dict):
+    def track(self, user_id: str, provider: str, model_name: str, usage_dict: Dict):
         data = {
+            "provider": provider,
             "model_name": model_name,
             "completion_tokens": usage_dict["completion_tokens"],
             "prompt_tokens": usage_dict["prompt_tokens"],
             "total_tokens": usage_dict["total_tokens"],
             "user_id": user_id,
-            "created_at": int(datetime.utcnow().timestamp())
+            "created_at": int(datetime.utcnow().timestamp()),
         }
         self.db.collection(DB_KEY_TOKEN_USAGES).add(data)
 
