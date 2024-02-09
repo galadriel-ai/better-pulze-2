@@ -21,7 +21,7 @@ async def execute(
     validated_user: ValidatedUser,
 ) -> AsyncIterable:
     # Clean up etc
-    request.model = "mistralai/Mistral-7B-Instruct-v0.1"
+    request.model = "mistral-7b-instruct"
     request_input = request.model_dump()
 
     for m in request_input["messages"]:
@@ -58,7 +58,14 @@ async def execute(
             except:
                 pass
 
-            yield line
+            try:
+                decoded = line.decode()
+                decoded_line = json.loads(decoded.split("data: ")[-1])
+                decoded_line["model"] = "mistralai/Mistral-7B-Instruct-v0.2"
+                decoded = "data: " + json.dumps(decoded_line)
+                yield str.encode(decoded)
+            except:
+                yield line
         if usage is None:
             prompt_tokens = await _estimate_prompt_len(request.messages)
             usage = {
@@ -67,7 +74,9 @@ async def execute(
                 "total_tokens": completion_tokens + prompt_tokens,
             }
         token_tracker.track(
-            validated_user.uid, endpoint.name, {"model": request.model, "usage": usage}
+            validated_user.uid, endpoint.name, {
+                "model": "mistralai/Mistral-7B-Instruct-v0.2", "usage": usage
+            }
         )
         analytics.track(
             TrackingEventType.API_REQUEST,

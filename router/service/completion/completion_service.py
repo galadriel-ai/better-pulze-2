@@ -23,7 +23,7 @@ async def execute(
     validated_user: ValidatedUser,
 ) -> JSONResponse:
     # Clean up etc
-    request.model = "mistralai/Mistral-7B-Instruct-v0.1"
+    request.model = "mistral-7b-instruct"
     request_input = request.model_dump()
 
     for m in request_input["messages"]:
@@ -45,6 +45,7 @@ async def execute(
         validated_user.email,
         tokens=response_dict.get("usage"),
     )
+    response_dict["model"] = "mistralai/Mistral-7B-Instruct-v0.2"
     return JSONResponse(content=response_dict, status_code=status)
 
 
