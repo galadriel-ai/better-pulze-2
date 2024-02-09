@@ -14,9 +14,9 @@ class ChatCompletionEndpoint:
 def get_chat_completion_endpoint() -> ChatCompletionEndpoint:
     if random.random() < PROVIDER_RATIO:
         return ChatCompletionEndpoint(
-            name="anyscale",
-            url="https://api.endpoints.anyscale.com/v1/chat/completions",
-            headers={"Authorization": f'Bearer {os.getenv("ANYSCALE_LLM_API_KEY")}'},
+            name="perplexity",
+            url="https://api.perplexity.ai/chat/completions",
+            headers={"Authorization": f'Bearer {os.getenv("PERPLEXITY_API_KEY")}'},
         )
     return ChatCompletionEndpoint(
         name="llmOS_vllm", url=f"{LLM_BASE_URL}chat/completions"

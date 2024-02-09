@@ -21,7 +21,7 @@ async def execute(
     validated_user: ValidatedUser,
 ) -> AsyncIterable:
     # Clean up etc
-    request.model = "mistralai/Mistral-7B-Instruct-v0.1"
+    request.model = "mistral-7b-instruct"
     request_input = request.model_dump()
 
     for m in request_input["messages"]:
