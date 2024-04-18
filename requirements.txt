@@ -7,7 +7,7 @@ langchain
 openai
 langsmith
 python-dotenv
-aiohttp==3.8.6
+aiohttp==3.9.4
 prometheus-client
 pytest
 firebase-admin
